@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DataLens — Living Intelligence Dashboard by Sumit Sahu</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --page:   #f2f2f7;
+  --card:   #ffffff;
+  --ink:    #1c1c1e;
+  --ink2:   #3a3a3c;
+  --ink3:   #636366;
+  --ink4:   #8e8e93;
+  --rule:   #e5e5ea;
+  --rule2:  #d1d1d6;
+  --accent: #0071e3;
+  --green:  #34c759;
+  --red:    #ff3b30;
+  --orange: #ff9500;
+  --purple: #af52de;
+  --sans:   'Inter', -apple-system, sans-serif;
+  --mono:   'DM Mono', monospace;
+  --sh-sm:  0 1px 4px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+  --sh:     0 4px 20px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.05);
+  --sh-md:  0 8px 40px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.06);
+  --sh-lg:  0 24px 64px rgba(0,0,0,.13), 0 4px 16px rgba(0,0,0,.07);
+  --r:      12px;
+  --r-sm:   8px;
+  --r-lg:   18px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ════════════════════════════════════
+   AMBIENT ORBS  (behind everything)
+════════════════════════════════════ */
+#orb-layer {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0;
+  animation: orbDrift var(--dur, 18s) ease-in-out infinite var(--delay, 0s);
+}
+@keyframes orbDrift {
+  0%   { transform: translate(0, 0)   scale(1);    opacity: 0; }
+  10%  { opacity: var(--op, .18); }
+  50%  { transform: translate(var(--tx, 60px), var(--ty, -40px)) scale(1.15); }
+  90%  { opacity: var(--op, .18); }
+  100% { transform: translate(0, 0)   scale(1);    opacity: 0; }
+}
+
+/* ════════════════════════════════════
+   NAV
+════════════════════════════════════ */
+nav {
+  position: sticky; top: 0; z-index: 200;
+  height: 52px;
+  background: rgba(255,255,255,.78);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  border-bottom: 1px solid var(--rule);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px;
+}
+.nav-logo { display: flex; align-items: center; gap: 10px; }
+.nav-logo-mark {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,113,227,.35);
+}
+.nav-logo-mark svg { width: 16px; height: 16px; fill: #fff; }
+.nav-brand { font: 600 15px/1 var(--sans); color: var(--ink); letter-spacing: -.3px; }
+.nav-brand span { color: var(--accent); }
+.nav-pills { display: flex; gap: 4px; }
+.nav-pill {
+  padding: 5px 14px; border-radius: 20px; border: none;
+  font: 500 13px/1 var(--sans); cursor: pointer; background: transparent;
+  color: var(--ink3); transition: all .18s;
+}
+.nav-pill:hover { background: var(--rule); color: var(--ink); }
+.nav-pill.on { background: var(--ink); color: #fff; }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.live-dot-wrap {
+  display: flex; align-items: center; gap: 6px;
+  font: 500 11px/1 var(--mono); color: var(--green);
+  padding: 4px 10px; border-radius: 20px;
+  border: 1px solid rgba(52,199,89,.25);
+  background: rgba(52,199,89,.06);
+}
+.live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  animation: livePulse 1.4s ease-in-out infinite;
+}
+@keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+.by-badge { font: 400 11px/1 var(--mono); color: var(--ink4); padding: 4px 10px; border: 1px solid var(--rule2); border-radius: 20px; }
+.by-badge strong { color: var(--accent); font-weight: 500; }
+.nav-btn {
+  padding: 6px 16px; border-radius: 20px; border: none;
+  background: var(--accent); color: #fff;
+  font: 500 13px/1 var(--sans); cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,113,227,.3);
+  transition: all .18s;
+}
+.nav-btn:hover { background: #0077ed; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,113,227,.4); }
+
+/* ════════════════════════════════════
+   HERO
+════════════════════════════════════ */
+.hero {
+  padding: 28px 28px 0;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px;
+  position: relative; z-index: 10;
+}
+.hero-eyebrow { font: 500 11px/1 var(--mono); color: var(--accent); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; }
+.hero-title { font: 700 28px/1.1 var(--sans); color: var(--ink); letter-spacing: -.6px; }
+.hero-sub { font: 400 12px/1 var(--mono); color: var(--ink4); letter-spacing: .04em; margin-top: 5px; }
+.hero-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  padding: 8px 18px; border-radius: var(--r-sm);
+  border: 1px solid var(--rule2); background: var(--card);
+  color: var(--ink2); font: 500 13px/1 var(--sans);
+  cursor: pointer; transition: all .18s;
+  box-shadow: var(--sh-sm);
+}
+.btn:hover { background: #fff; box-shadow: var(--sh); transform: translateY(-1px); border-color: var(--rule2); }
+.btn-primary {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+  box-shadow: 0 2px 10px rgba(0,113,227,.3);
+}
+.btn-primary:hover { background: #0077ed; box-shadow: 0 4px 18px rgba(0,113,227,.4); }
+
+/* ════════════════════════════════════
+   STAT CARDS  (with ticker)
+════════════════════════════════════ */
+.stats-row {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 12px; padding: 20px 28px 0;
+  position: relative; z-index: 10;
+}
+.stat-card {
+  background: var(--card);
+  border-radius: var(--r);
+  border: 1px solid var(--rule);
+  padding: 16px 18px;
+  box-shadow: var(--sh-sm);
+  position: relative; overflow: hidden;
+  transition: box-shadow .25s, transform .25s;
+  cursor: default;
+}
+.stat-card:hover { box-shadow: var(--sh); transform: translateY(-3px) scale(1.01); }
+.stat-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: var(--sc, var(--accent));
+  border-radius: var(--r) var(--r) 0 0;
+}
+/* subtle shine sweep */
+.stat-card::after {
+  content: ''; position: absolute;
+  top: -50%; left: -60%; width: 40%; height: 200%;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,.35), transparent);
+  transform: skewX(-20deg);
+  animation: shineSweep 4s ease-in-out infinite var(--sd, 0s);
+  pointer-events: none;
+}
+@keyframes shineSweep { 0%,70%,100%{left:-60%;opacity:0} 72%{opacity:1} 85%{left:130%;opacity:1} 87%{opacity:0} }
+
+.stat-label { font: 500 11px/1 var(--sans); color: var(--ink4); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+.stat-val { font: 700 24px/1 var(--sans); color: var(--ink); letter-spacing: -.5px; }
+.stat-base { /* stores base value */ }
+.stat-sub { font: 400 11px/1 var(--sans); color: var(--ink4); margin-top: 4px; }
+.stat-ticker {
+  position: absolute; top: 14px; right: 14px;
+  font: 500 10px/1 var(--mono); padding: 2px 6px;
+  border-radius: 4px;
+  transition: all .4s;
+}
+.tick-up   { background: rgba(52,199,89,.12); color: #15803d; }
+.tick-down { background: rgba(255,59,48,.10); color: #b91c1c; }
+.tick-flat { background: var(--rule); color: var(--ink4); }
+
+/* 3D TILT */
+.stat-card { perspective: 600px; transform-style: preserve-3d; }
+.stat-card-inner { transform-style: preserve-3d; transition: transform .15s ease; }
+
+/* ════════════════════════════════════
+   MAIN GRID
+════════════════════════════════════ */
+.main-grid {
+  display: grid; grid-template-columns: 260px 1fr;
+  gap: 16px; padding: 16px 28px 28px;
+  position: relative; z-index: 10;
+}
+
+/* ════════════════════════════════════
+   SIDEBAR
+════════════════════════════════════ */
+.sidebar { display: flex; flex-direction: column; gap: 12px; }
+.panel {
+  background: var(--card);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--rule);
+  box-shadow: var(--sh-sm);
+  overflow: hidden;
+  transition: box-shadow .2s;
+}
+.panel:hover { box-shadow: var(--sh); }
+.panel-hd {
+  padding: 13px 16px 11px;
+  border-bottom: 1px solid var(--rule);
+  font: 600 12px/1 var(--sans); color: var(--ink2);
+}
+.panel-bd { padding: 10px; }
+
+.ds-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: var(--r-sm);
+  cursor: pointer; transition: all .15s; margin-bottom: 2px;
+  border: 1px solid transparent;
+}
+.ds-item:hover { background: var(--page); }
+.ds-item.on { background: rgba(0,113,227,.06); border-color: rgba(0,113,227,.18); }
+.ds-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.ds-name { font: 500 12px/1.3 var(--sans); color: var(--ink); margin-bottom: 2px; }
+.ds-item.on .ds-name { color: var(--accent); }
+.ds-meta { font: 400 10px/1 var(--mono); color: var(--ink4); }
+
+.type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.type-btn {
+  padding: 10px 8px; border-radius: var(--r-sm);
+  border: 1px solid var(--rule); background: transparent;
+  cursor: pointer; transition: all .18s; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.type-btn:hover { background: var(--page); border-color: var(--rule2); }
+.type-btn.on { border-color: var(--accent); background: rgba(0,113,227,.06); }
+.type-btn .ti { font-size: 19px; line-height: 1; }
+.type-btn .tl { font: 500 11px/1 var(--sans); color: var(--ink2); }
+.type-btn.on .tl { color: var(--accent); }
+
+.swatch-row { display: flex; gap: 7px; flex-wrap: wrap; }
+.swatch {
+  width: 26px; height: 26px; border-radius: 50%;
+  cursor: pointer; border: 2.5px solid transparent;
+  box-shadow: var(--sh-sm); transition: all .2s;
+}
+.swatch:hover { transform: scale(1.18); box-shadow: var(--sh); }
+.swatch.on { border-color: var(--ink); transform: scale(1.12); }
+
+.paste-ta {
+  width: 100%; min-height: 88px; resize: vertical;
+  background: var(--page); border: 1px solid var(--rule2);
+  border-radius: var(--r-sm); color: var(--ink);
+  font: 400 11px/1.6 var(--mono); padding: 10px; outline: none;
+  transition: border-color .18s, box-shadow .18s;
+}
+.paste-ta:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,113,227,.1); }
+.paste-ta::placeholder { color: var(--ink4); }
+.parse-btn {
+  width: 100%; margin-top: 8px; padding: 9px;
+  background: var(--accent); color: #fff; border: none;
+  border-radius: var(--r-sm); font: 600 12px/1 var(--sans);
+  cursor: pointer; transition: all .18s;
+  box-shadow: 0 2px 8px rgba(0,113,227,.25);
+}
+.parse-btn:hover { background: #0077ed; box-shadow: 0 4px 14px rgba(0,113,227,.4); }
+
+/* ════════════════════════════════════
+   CHART PANEL  (macOS window chrome)
+════════════════════════════════════ */
+.chart-panel {
+  background: var(--card);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--rule);
+  box-shadow: var(--sh-lg);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* macOS chrome */
+.mac-chrome {
+  background: linear-gradient(180deg, #2a2a2e 0%, #1c1c1e 100%);
+  padding: 12px 18px 11px;
+  display: flex; align-items: center; gap: 0;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  position: relative; flex-shrink: 0;
+}
+/* the classic three dots */
+.mac-dots { display: flex; gap: 7px; align-items: center; }
+.mac-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  cursor: default; transition: filter .15s;
+  position: relative;
+}
+.mac-dot:hover { filter: brightness(1.2); }
+.mac-dot.close  { background: #ff5f57; box-shadow: 0 0 0 0.5px rgba(0,0,0,.2); }
+.mac-dot.min    { background: #febc2e; box-shadow: 0 0 0 0.5px rgba(0,0,0,.2); }
+.mac-dot.max    { background: #28c840; box-shadow: 0 0 0 0.5px rgba(0,0,0,.2); }
+/* title bar centre */
+.mac-title-area {
+  flex: 1; text-align: center;
+  font: 500 12px/1 var(--sans); color: rgba(255,255,255,.6);
+  letter-spacing: .01em; padding: 0 80px;
+}
+.mac-title-area strong { color: rgba(255,255,255,.85); font-weight: 500; }
+/* right controls */
+.mac-right { display: flex; gap: 6px; }
+.mac-btn {
+  padding: 4px 12px; border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.07);
+  color: rgba(255,255,255,.75); font: 500 10px/1 var(--sans);
+  cursor: pointer; transition: all .18s; letter-spacing: .02em;
+}
+.mac-btn:hover { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.25); color: #fff; }
+.mac-btn.go { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 1px 6px rgba(0,113,227,.4); }
+.mac-btn.go:hover { background: #0077ed; }
+
+/* status bar inside chrome */
+.mac-status {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(0,113,227,.6) 30%, rgba(52,199,89,.5) 60%, transparent 100%);
+  animation: statusFlow 3s ease-in-out infinite;
+}
+@keyframes statusFlow { 0%,100%{opacity:.4;transform:scaleX(.6)} 50%{opacity:1;transform:scaleX(1)} }
+
+/* canvas area */
+.chart-canvas-area {
+  padding: 24px 28px 12px;
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  min-height: 320px; position: relative;
+}
+/* breathing ring behind chart */
+.breath-ring {
+  position: absolute;
+  width: 260px; height: 260px; border-radius: 50%;
+  border: 1px solid rgba(0,113,227,.08);
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  pointer-events: none;
+  animation: breathRing 4s ease-in-out infinite;
+}
+.breath-ring:nth-child(2) { width: 340px; height: 340px; animation-delay: .5s; border-color: rgba(52,199,89,.05); }
+.breath-ring:nth-child(3) { width: 420px; height: 420px; animation-delay: 1s; border-color: rgba(175,82,222,.04); }
+@keyframes breathRing { 0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.6} 50%{transform:translate(-50%,-50%) scale(1.04);opacity:1} }
+
+/* insight strip */
+.insight-strip {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1px; background: var(--rule);
+  border-top: 1px solid var(--rule);
+}
+.insight-cell {
+  background: var(--card);
+  padding: 12px 18px;
+  display: flex; align-items: flex-start; gap: 9px;
+}
+.i-pip { width: 5px; height: 5px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.i-txt { font: 400 12px/1.55 var(--sans); color: var(--ink2); }
+.i-txt strong { font-weight: 600; color: var(--ink); }
+
+/* table */
+.table-section { border-top: 1px solid var(--rule); overflow: hidden; border-radius: 0 0 var(--r-lg) var(--r-lg); }
+.table-head-row {
+  padding: 11px 20px; display: flex; align-items: center; justify-content: space-between;
+  background: #fafafa; border-bottom: 1px solid var(--rule);
+}
+.table-head-title { font: 600 12px/1 var(--sans); color: var(--ink2); }
+.table-head-ct { font: 400 11px/1 var(--mono); color: var(--ink4); }
+.tbl-scroll { overflow-x: auto; max-height: 190px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 8px 18px; text-align: left;
+  background: #f9f9f9; font: 600 10px/1 var(--sans);
+  color: var(--ink4); letter-spacing: .06em; text-transform: uppercase;
+  border-bottom: 1px solid var(--rule);
+  position: sticky; top: 0; white-space: nowrap;
+}
+tbody td { padding: 8px 18px; border-bottom: 1px solid var(--rule); font: 400 12px/1 var(--sans); color: var(--ink2); white-space: nowrap; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: rgba(0,113,227,.025); }
+.td-num { font: 600 12px/1 var(--mono); color: var(--accent); text-align: right; }
+.td-bar-track { height: 5px; background: var(--rule); border-radius: 3px; overflow: hidden; width: 90px; }
+.td-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .9s cubic-bezier(.23,1,.32,1); }
+.rank1-name { font-weight: 600; color: var(--accent); }
+
+/* toast */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--ink); color: #fff;
+  padding: 10px 18px; border-radius: 20px;
+  font: 500 12px/1 var(--sans);
+  box-shadow: var(--sh-lg); z-index: 999;
+  opacity: 0; transform: translateY(12px);
+  transition: all .25s; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: var(--page); }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,.15); border-radius: 4px; }
+
+@media(max-width:880px) {
+  .main-grid { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .insight-strip { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── AMBIENT ORB LAYER ── -->
+<div id="orb-layer">
+  <div class="orb" style="width:520px;height:520px;background:radial-gradient(circle,rgba(0,113,227,.22),transparent 70%);top:-100px;left:-100px;--dur:22s;--delay:0s;--tx:80px;--ty:60px;--op:.22"></div>
+  <div class="orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(52,199,89,.18),transparent 70%);top:30%;right:-80px;--dur:18s;--delay:4s;--tx:-60px;--ty:80px;--op:.18"></div>
+  <div class="orb" style="width:460px;height:460px;background:radial-gradient(circle,rgba(175,82,222,.15),transparent 70%);bottom:-80px;left:30%;--dur:25s;--delay:8s;--tx:40px;--ty:-60px;--op:.15"></div>
+  <div class="orb" style="width:300px;height:300px;background:radial-gradient(circle,rgba(255,149,0,.12),transparent 70%);bottom:20%;right:20%;--dur:20s;--delay:2s;--tx:-40px;--ty:40px;--op:.12"></div>
+</div>
+
+<!-- ── NAV ── -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-mark">
+      <svg viewBox="0 0 16 16"><path d="M2 12h2V8H2v4zm3 0h2V4H5v8zm3 0h2V6H8v6zm3 0h2V2h-2v10z"/></svg>
+    </div>
+    <div class="nav-brand">Data<span>Lens</span></div>
+  </div>
+  <div class="nav-pills">
+    <button class="nav-pill on">Charts</button>
+    <button class="nav-pill">Table</button>
+    <button class="nav-pill">Insights</button>
+  </div>
+  <div class="nav-right">
+    <div class="live-dot-wrap"><div class="live-dot"></div>Live</div>
+    <div class="by-badge">by <strong>Sumit Sahu</strong></div>
+    <button class="nav-btn" onclick="exportPNG()">Export PNG</button>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div>
+    <div class="hero-eyebrow">Visual Intelligence Studio</div>
+    <div class="hero-title" id="heroTitle">India Salary Benchmarks 2025</div>
+    <div class="hero-sub" id="heroSub">ANALYST ROLES · ANNUAL PACKAGE IN LAKHS</div>
+  </div>
+  <div class="hero-actions">
+    <button class="btn" onclick="animateChart()">▶ Replay</button>
+    <button class="btn" onclick="exportCSV()">Export CSV</button>
+    <button class="btn btn-primary" onclick="exportPNG()">Export PNG</button>
+  </div>
+</div>
+
+<!-- ── STAT CARDS ── -->
+<div class="stats-row">
+  <div class="stat-card" style="--sc:var(--accent);--sd:0s" id="sc0" onmousemove="tiltCard(this,event)" onmouseleave="untiltCard(this)">
+    <div class="stat-ticker tick-flat" id="tick0">—</div>
+    <div class="stat-label">Highest</div>
+    <div class="stat-val" id="sv0">—</div>
+    <div class="stat-sub" id="ss0">Loading…</div>
+  </div>
+  <div class="stat-card" style="--sc:var(--green);--sd:1s" id="sc1" onmousemove="tiltCard(this,event)" onmouseleave="untiltCard(this)">
+    <div class="stat-ticker tick-flat" id="tick1">—</div>
+    <div class="stat-label">Average</div>
+    <div class="stat-val" id="sv1">—</div>
+    <div class="stat-sub">Across all data points</div>
+  </div>
+  <div class="stat-card" style="--sc:var(--orange);--sd:2s" id="sc2" onmousemove="tiltCard(this,event)" onmouseleave="untiltCard(this)">
+    <div class="stat-ticker tick-flat" id="tick2">—</div>
+    <div class="stat-label">Lowest</div>
+    <div class="stat-val" id="sv2">—</div>
+    <div class="stat-sub" id="ss2">Loading…</div>
+  </div>
+  <div class="stat-card" style="--sc:var(--purple);--sd:3s" id="sc3" onmousemove="tiltCard(this,event)" onmouseleave="untiltCard(this)">
+    <div class="stat-ticker tick-flat" id="tick3">—</div>
+    <div class="stat-label">Data Points</div>
+    <div class="stat-val" id="sv3">—</div>
+    <div class="stat-sub">In this dataset</div>
+  </div>
+</div>
+
+<!-- ── MAIN GRID ── -->
+<div class="main-grid">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="panel">
+      <div class="panel-hd">Datasets</div>
+      <div class="panel-bd" style="padding:8px">
+        <div class="ds-item on" onclick="loadDS(0,this)">
+          <div class="ds-dot" style="background:#0071e3"></div>
+          <div><div class="ds-name">India Salary Benchmarks</div><div class="ds-meta">Analyst roles · 2025 · ₹L</div></div>
+        </div>
+        <div class="ds-item" onclick="loadDS(1,this)">
+          <div class="ds-dot" style="background:#34c759"></div>
+          <div><div class="ds-name">SaaS Market Growth</div><div class="ds-meta">2020–2028E · $B global</div></div>
+        </div>
+        <div class="ds-item" onclick="loadDS(2,this)">
+          <div class="ds-dot" style="background:#ff9500"></div>
+          <div><div class="ds-name">India Startup Funding</div><div class="ds-meta">By sector · 2024 · $B</div></div>
+        </div>
+        <div class="ds-item" onclick="loadDS(3,this)">
+          <div class="ds-dot" style="background:#af52de"></div>
+          <div><div class="ds-name">Tech Giants Revenue</div><div class="ds-meta">Apple, Amazon, Nvidia · $B</div></div>
+        </div>
+        <div class="ds-item" onclick="loadDS(4,this)">
+          <div class="ds-dot" style="background:#ff3b30"></div>
+          <div><div class="ds-name">India Employment</div><div class="ds-meta">By sector · 2024 · Millions</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">Chart Type</div>
+      <div class="panel-bd">
+        <div class="type-grid">
+          <button class="type-btn on" onclick="setType('bar',this)"><div class="ti">📊</div><div class="tl">Bar</div></button>
+          <button class="type-btn" onclick="setType('line',this)"><div class="ti">📈</div><div class="tl">Line</div></button>
+          <button class="type-btn" onclick="setType('doughnut',this)"><div class="ti">🍩</div><div class="tl">Donut</div></button>
+          <button class="type-btn" onclick="setType('radar',this)"><div class="ti">🕸️</div><div class="tl">Radar</div></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">Colour Theme</div>
+      <div class="panel-bd">
+        <div class="swatch-row">
+          <div class="swatch on" data-s="0" onclick="setScheme(0,this)" style="background:conic-gradient(#0071e3 0%,#34aadc 100%)"></div>
+          <div class="swatch" data-s="1" onclick="setScheme(1,this)" style="background:conic-gradient(#34c759,#30d158)"></div>
+          <div class="swatch" data-s="2" onclick="setScheme(2,this)" style="background:conic-gradient(#ff9500,#ff6000)"></div>
+          <div class="swatch" data-s="3" onclick="setScheme(3,this)" style="background:conic-gradient(#af52de,#bf5af2)"></div>
+          <div class="swatch" data-s="4" onclick="setScheme(4,this)" style="background:conic-gradient(#ff3b30,#ff6b6b)"></div>
+          <div class="swatch" data-s="5" onclick="setScheme(5,this)" style="background:conic-gradient(#1c1c1e,#636366)"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hd">Paste Your Data</div>
+      <div class="panel-bd">
+        <div style="font:400 11px/1.5 var(--sans);color:var(--ink4);margin-bottom:8px">Format: <code style="font-family:var(--mono);background:var(--page);padding:1px 5px;border-radius:4px;font-size:10px">Label, Number</code> one per line</div>
+        <textarea class="paste-ta" id="pasteBox" placeholder="Q1 Revenue, 120&#10;Q2 Revenue, 185&#10;Q3 Revenue, 160&#10;Q4 Revenue, 210"></textarea>
+        <button class="parse-btn" onclick="parsePaste()">Visualise My Data →</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CHART PANEL -->
+  <div class="chart-panel">
+
+    <!-- macOS chrome -->
+    <div class="mac-chrome">
+      <div class="mac-dots">
+        <div class="mac-dot close"></div>
+        <div class="mac-dot min"></div>
+        <div class="mac-dot max"></div>
+      </div>
+      <div class="mac-title-area">
+        <strong id="macTitle">India Salary Benchmarks 2025</strong>
+        <span id="macSub" style="font-size:10px;opacity:.45;margin-left:6px">— DataLens Studio</span>
+      </div>
+      <div class="mac-right">
+        <button class="mac-btn" onclick="animateChart()">▶ Replay</button>
+        <button class="mac-btn go" onclick="exportPNG()">Export</button>
+      </div>
+      <div class="mac-status"></div>
+    </div>
+
+    <!-- canvas -->
+    <div class="chart-canvas-area">
+      <div class="breath-ring"></div>
+      <div class="breath-ring"></div>
+      <div class="breath-ring"></div>
+      <canvas id="myChart" style="position:relative;z-index:1;width:100%;max-height:300px"></canvas>
+    </div>
+
+    <!-- insights -->
+    <div class="insight-strip" id="insightStrip"></div>
+
+    <!-- table -->
+    <div class="table-section">
+      <div class="table-head-row">
+        <div class="table-head-title">Data Table</div>
+        <div class="table-head-ct" id="tableCt">8 rows</div>
+      </div>
+      <div class="tbl-scroll">
+        <table><thead><tr id="tHead"></tr></thead><tbody id="tBody"></tbody></table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══ DATASETS ══════════════════════════════════════════════════ */
+const DS = [
+  { title:'India Salary Benchmarks 2025', sub:'ANALYST ROLES · ANNUAL PACKAGE IN LAKHS', unit:'₹L', color:'#0071e3',
+    labels:['Jr. BA','Business Analyst','Sr. BA','Lead Analyst','Data Analyst','Sr. Data Analyst','Research Analyst','Strategy Analyst'],
+    values:[4.8,7.5,11.2,16.4,8.2,13.6,6.9,14.8],
+    insights:[
+      {t:'<strong>Strategy Analyst</strong> commands ₹14.8L — highest in the category', c:'#0071e3'},
+      {t:'Average across all analyst roles: <strong>₹10.4L per annum</strong>', c:'#34c759'},
+      {t:'Sr. BA → Lead Analyst jump is <strong>46%</strong> — the most critical career step', c:'#ff9500'},
+      {t:'Jr. to Sr. BA is a <strong>2.3× salary multiplier</strong> over 3–5 years', c:'#af52de'},
+    ]},
+  { title:'Global SaaS Market Growth 2020–2028E', sub:'MARKET SIZE · BILLION USD · 14.6% BLENDED CAGR', unit:'$B', color:'#34c759',
+    labels:['2020','2021','2022','2023','2024E','2025E','2026E','2027E','2028E'],
+    values:[102,121,138,158,181,207,237,275,317],
+    insights:[
+      {t:'Market <strong>triples from $102B to $317B</strong> over 8 years', c:'#34c759'},
+      {t:'<strong>Security SaaS</strong> is fastest sub-vertical at 22% CAGR within segment', c:'#0071e3'},
+      {t:'AI-embedded SaaS commands a <strong>15–18% price premium</strong> over legacy', c:'#ff9500'},
+      {t:'India sub-market at <strong>28% CAGR</strong> — underweighted in global portfolios', c:'#af52de'},
+    ]},
+  { title:'India Startup Funding by Sector 2024', sub:'TOTAL FUNDING · BILLION USD · TOP 8 SECTORS', unit:'$B', color:'#ff9500',
+    labels:['Fintech','D2C/E-comm','EV/CleanTech','Healthtech','SaaS/B2B','EdTech','AgriTech','LogiTech'],
+    values:[3.8,2.9,2.4,2.1,1.8,1.2,0.7,1.1],
+    insights:[
+      {t:'<strong>Fintech leads</strong> at $3.8B — 23% of all India startup funding', c:'#ff9500'},
+      {t:'EV/CleanTech fastest growing at <strong>+67% YoY</strong> vs 2023 levels', c:'#34c759'},
+      {t:'D2C close second at $2.9B driven by <strong>Tier-2 city expansion</strong>', c:'#0071e3'},
+      {t:'AgriTech at $0.7B — a <strong>massive white-space opportunity</strong> for investors', c:'#ff3b30'},
+    ]},
+  { title:'Global Tech Giants Revenue FY2024', sub:'ANNUAL REVENUE · BILLION USD · FISCAL YEAR 2024', unit:'$B', color:'#af52de',
+    labels:['Apple','Microsoft','Alphabet','Amazon','Meta','Nvidia','Samsung','Oracle'],
+    values:[383,245,307,574,134,61,224,53],
+    insights:[
+      {t:'<strong>Amazon leads at $574B</strong> combining AWS cloud + retail revenue', c:'#af52de'},
+      {t:'Nvidia <strong>grew 122% YoY</strong> — fastest growth rate in this cohort', c:'#34c759'},
+      {t:'Apple + Microsoft + Alphabet combined: <strong>$935B</strong> — exceeds Amazon', c:'#0071e3'},
+      {t:'Oracle smallest in revenue but <strong>highest operating margin</strong> in cloud at 42%', c:'#ff9500'},
+    ]},
+  { title:'India Employment by Sector 2024', sub:'WORKFORCE IN MILLIONS · ORGANISED + UNORGANISED', unit:'M', color:'#ff3b30',
+    labels:['Agriculture','Construction','Manufacturing','Trade/Retail','IT/Services','Education','Healthcare','Finance'],
+    values:[242,71,64,58,22,18,14,12],
+    insights:[
+      {t:'Agriculture employs <strong>48% of India\'s workforce</strong> but contributes only 15% GDP', c:'#ff3b30'},
+      {t:'IT/Services: <strong>8% GDP from just 4.4% of workforce</strong> — highest productivity', c:'#0071e3'},
+      {t:'Construction added <strong>+18M workers since 2021</strong> — infra push impact', c:'#34c759'},
+      {t:'Finance is smallest in headcount but has <strong>highest revenue per employee</strong>', c:'#af52de'},
+    ]},
+];
+
+const SCHEMES = [
+  ['#0071e3','#34aadc','#5ac8fa','#007aff','#0055ff','#409cff','#30b0c7','#64d2ff'],
+  ['#34c759','#30d158','#32ade6','#1c7c54','#2daa44','#51cf66','#63e6be','#2db24a'],
+  ['#ff9500','#ff6000','#ffcc00','#ff3b30','#ff8c00','#ffa500','#ffd60a','#ff453a'],
+  ['#af52de','#bf5af2','#9556cc','#cf4ddb','#7d40b0','#da71ee','#c264fe','#9f8bf4'],
+  ['#ff3b30','#ff6b6b','#ff2d55','#f4511e','#e03131','#c92a2a','#fa5252','#ff8787'],
+  ['#1c1c1e','#3a3a3c','#636366','#48484a','#545456','#6c6c70','#8e8e93','#aeaeb2'],
+];
+
+/* ══ STATE ══════════════════════════════════════════ */
+let cDS=0, cType='bar', cScheme=0, myChart=null, curData=null;
+let tickerBase={}, tickerIntvs=[];
+
+/* ══ CHART.JS DEFAULTS ══ */
+Chart.defaults.color = '#636366';
+Chart.defaults.borderColor = '#e5e5ea';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 11;
+
+/* ══ CHART OPTIONS ══ */
+function chartOpts(type, unit) {
+  const o = {
+    responsive:true, maintainAspectRatio:true,
+    animation:{duration:900, easing:'easeOutQuart'},
+    plugins:{
+      legend:{
+        display: type==='doughnut'||type==='radar',
+        position:'right',
+        labels:{color:'#3a3a3c',font:{family:"'Inter',sans-serif",size:11},padding:12,boxWidth:10,boxHeight:10}
+      },
+      tooltip:{
+        backgroundColor:'#1c1c1e', borderColor:'rgba(255,255,255,.08)', borderWidth:1,
+        titleColor:'#fff', bodyColor:'rgba(255,255,255,.7)',
+        titleFont:{family:"'Inter',sans-serif",size:13,weight:'600'},
+        bodyFont:{family:"'DM Mono',monospace",size:11},
+        padding:14, cornerRadius:10,
+        callbacks:{label:c=>` ${c.parsed.y!==undefined?c.parsed.y:c.parsed} ${unit}`}
+      }
+    }
+  };
+  if(type==='bar') {
+    o.aspectRatio=2.1;
+    o.scales={
+      x:{grid:{color:'#f2f2f7',drawBorder:false},ticks:{color:'#636366'},border:{color:'#e5e5ea'}},
+      y:{grid:{color:'#f2f2f7',drawBorder:false},ticks:{color:'#636366',callback:v=>v+' '+unit},border:{color:'#e5e5ea'}}
+    };
+  } else if(type==='line') {
+    o.aspectRatio=2.1;
+    o.scales={
+      x:{grid:{color:'#f2f2f7'},ticks:{color:'#636366'},border:{color:'#e5e5ea'}},
+      y:{grid:{color:'#f2f2f7'},ticks:{color:'#636366',callback:v=>v+' '+unit},border:{color:'#e5e5ea'}}
+    };
+  } else if(type==='doughnut') {
+    o.aspectRatio=1.8; o.cutout='62%';
+    o.plugins.tooltip.callbacks={label:c=>` ${c.label}: ${c.parsed} ${unit}`};
+  } else if(type==='radar') {
+    o.aspectRatio=1.6;
+    o.scales={r:{grid:{color:'#e5e5ea'},pointLabels:{color:'#3a3a3c',font:{size:10}},ticks:{display:false},angleLines:{color:'#e5e5ea'}}};
+  }
+  return o;
+}
+
+function buildData(type, labels, values, scheme) {
+  const c = SCHEMES[scheme];
+  if(type==='bar') return {labels,datasets:[{label:'Value',data:values,backgroundColor:c.map(x=>x+'cc'),borderColor:c,borderWidth:1.5,borderRadius:6,borderSkipped:false}]};
+  if(type==='line') return {labels,datasets:[{label:'Value',data:values,borderColor:c[0],backgroundColor:c[0]+'18',borderWidth:2.5,pointBackgroundColor:c[0],pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:5,fill:true,tension:.38}]};
+  if(type==='doughnut') return {labels,datasets:[{data:values,backgroundColor:c.map(x=>x+'dd'),borderColor:'#fff',borderWidth:3,hoverOffset:10}]};
+  if(type==='radar') return {labels,datasets:[{label:'Value',data:values,backgroundColor:c[0]+'22',borderColor:c[0],borderWidth:2,pointBackgroundColor:c[0],pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:4}]};
+}
+
+/* ══ RENDER ══ */
+function render(ds) {
+  const ctx = document.getElementById('myChart').getContext('2d');
+  if(myChart){myChart.destroy();myChart=null;}
+  myChart = new Chart(ctx,{type:cType,data:buildData(cType,ds.labels,ds.values,cScheme),options:chartOpts(cType,ds.unit)});
+  updateStats(ds);
+  updateInsights(ds);
+  updateTable(ds);
+  updateHeaders(ds);
+  startTickers(ds);
+}
+
+function updateHeaders(ds) {
+  ['heroTitle','macTitle'].forEach(id=>document.getElementById(id).textContent=ds.title);
+  document.getElementById('heroSub').textContent=ds.sub;
+}
+
+/* ══ STATS ══ */
+function updateStats(ds) {
+  const v=ds.values, mx=Math.max(...v), mn=Math.min(...v);
+  const avg=Math.round(v.reduce((a,b)=>a+b,0)/v.length*10)/10;
+  document.getElementById('sv0').textContent=mx+ds.unit;
+  document.getElementById('sv1').textContent=avg+ds.unit;
+  document.getElementById('sv2').textContent=mn+ds.unit;
+  document.getElementById('sv3').textContent=v.length;
+  document.getElementById('ss0').textContent=ds.labels[v.indexOf(mx)];
+  document.getElementById('ss2').textContent=ds.labels[v.indexOf(mn)];
+  /* store bases for tickers */
+  tickerBase = {max:mx, avg:avg, min:mn, count:v.length, unit:ds.unit};
+}
+
+/* ══ NUMBER TICKERS ══ */
+function startTickers(ds) {
+  tickerIntvs.forEach(clearInterval);
+  tickerIntvs = [];
+  const bases = [
+    {id:'sv0',tid:'tick0',base:Math.max(...ds.values),unit:ds.unit,pct:true},
+    {id:'sv1',tid:'tick1',base:Math.round(ds.values.reduce((a,b)=>a+b,0)/ds.values.length*10)/10,unit:ds.unit,pct:true},
+    {id:'sv2',tid:'tick2',base:Math.min(...ds.values),unit:ds.unit,pct:true},
+    {id:'sv3',tid:'tick3',base:ds.values.length,unit:'',pct:false},
+  ];
+  bases.forEach(({id,tid,base,unit,pct}, i) => {
+    let dir = 1;
+    const iv = setInterval(() => {
+      if(!pct){return;}
+      /* oscillate ±2% */
+      const noise = (Math.random()-0.5)*0.04;
+      const raw = base*(1+noise*dir);
+      const disp = Number.isInteger(base) ? Math.round(raw) : Math.round(raw*10)/10;
+      const diff = disp - base;
+      const el = document.getElementById(id);
+      const tk = document.getElementById(tid);
+      if(el) el.textContent = disp + unit;
+      if(tk) {
+        if(Math.abs(diff)<0.001){tk.className='stat-ticker tick-flat';tk.textContent='—';}
+        else if(diff>0){tk.className='stat-ticker tick-up';tk.textContent='▲ +'+Math.abs(Math.round(diff*100)/100)+unit;}
+        else{tk.className='stat-ticker tick-down';tk.textContent='▼ '+Math.round(diff*100)/100+unit;}
+      }
+      dir*=-1;
+    }, 2200 + i*700);
+    tickerIntvs.push(iv);
+  });
+}
+
+/* ══ INSIGHTS ══ */
+function updateInsights(ds) {
+  document.getElementById('insightStrip').innerHTML=ds.insights.map(i=>
+    `<div class="insight-cell"><div class="i-pip" style="background:${i.c}"></div><div class="i-txt">${i.t}</div></div>`
+  ).join('');
+}
+
+/* ══ TABLE ══ */
+function updateTable(ds) {
+  const mx=Math.max(...ds.values);
+  document.getElementById('tableCt').textContent=ds.values.length+' rows';
+  document.getElementById('tHead').innerHTML='<th>Rank</th><th>Label</th><th>Value</th><th>% of Max</th><th>Distribution</th>';
+  const ranked=[...ds.values].map((v,i)=>({v,i})).sort((a,b)=>b.v-a.v);
+  const rankOf=v=>ranked.findIndex(x=>x.v===v)+1;
+  document.getElementById('tBody').innerHTML=ds.labels.map((l,i)=>{
+    const pct=Math.round(ds.values[i]/mx*100);
+    const r=rankOf(ds.values[i]);
+    return `<tr>
+      <td style="color:${r===1?'var(--accent)':'var(--ink4)'};font-weight:${r===1?'600':'400'}">${r}</td>
+      <td class="${r===1?'rank1-name':''}">${l}</td>
+      <td class="td-num">${ds.values[i]} ${ds.unit}</td>
+      <td style="color:var(--ink4)">${pct}%</td>
+      <td><div class="td-bar-track"><div class="td-bar-fill" style="width:${pct}%"></div></div></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══ CONTROLS ══ */
+function loadDS(idx,el){
+  cDS=idx; curData=DS[idx];
+  document.querySelectorAll('.ds-item').forEach(b=>b.classList.remove('on'));
+  if(el) el.classList.add('on');
+  render(curData);
+  toast('Loaded: '+curData.title.split(' ').slice(0,3).join(' ')+'…');
+}
+
+function setType(t,el){
+  cType=t;
+  document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('on'));
+  if(el) el.classList.add('on');
+  if(curData) render(curData);
+}
+
+function setScheme(idx,el){
+  cScheme=idx;
+  document.querySelectorAll('.swatch').forEach(b=>b.classList.remove('on'));
+  if(el) el.classList.add('on');
+  if(curData) render(curData);
+}
+
+function animateChart(){ if(myChart){myChart.reset();myChart.update();} }
+
+function parsePaste(){
+  const raw=document.getElementById('pasteBox').value.trim();
+  if(!raw){toast('Paste data first');return;}
+  const ls=[],vs=[];
+  raw.split('\n').filter(l=>l.trim()).forEach(l=>{
+    const p=l.split(',');
+    if(p.length<2) return;
+    const v=parseFloat(p[p.length-1].trim());
+    if(!isNaN(v)){ls.push(p[0].trim());vs.push(v);}
+  });
+  if(!ls.length){toast('Format: Label, Number — one per line');return;}
+  const mx=Math.max(...vs),mn=Math.min(...vs),avg=vs.reduce((a,b)=>a+b)/vs.length;
+  curData={
+    title:'My Custom Dataset',sub:ls.length+' DATA POINTS · USER INPUT',unit:'',color:'#0071e3',labels:ls,values:vs,
+    insights:[
+      {t:`Highest: <strong>${ls[vs.indexOf(mx)]}</strong> at ${mx}`,c:'#0071e3'},
+      {t:`Average value: <strong>${avg.toFixed(1)}</strong> across ${vs.length} points`,c:'#34c759'},
+      {t:`Range span: <strong>${mx-mn}</strong> between highest and lowest`,c:'#ff9500'},
+      {t:`Lowest: <strong>${ls[vs.indexOf(mn)]}</strong> at ${mn}`,c:'#ff3b30'},
+    ]
+  };
+  document.querySelectorAll('.ds-item').forEach(b=>b.classList.remove('on'));
+  render(curData);
+  toast('Custom data visualised!');
+}
+
+/* ══ 3D TILT on stat cards ══ */
+function tiltCard(el,ev){
+  const r=el.getBoundingClientRect();
+  const x=ev.clientX-r.left, y=ev.clientY-r.top;
+  const cx=r.width/2, cy=r.height/2;
+  const rx=(y-cy)/cy*10, ry=-(x-cx)/cx*10;
+  el.style.transform=`perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-3px) scale(1.02)`;
+  el.style.boxShadow=`0 12px 36px rgba(0,0,0,.14), ${-ry*.5}px ${rx*.5}px 20px rgba(0,0,0,.06)`;
+}
+function untiltCard(el){
+  el.style.transform='';
+  el.style.boxShadow='';
+}
+
+/* ══ CHART BAR BREATHING ══ */
+function breatheBars(){
+  if(!myChart||cType!=='bar') return;
+  const ds=myChart.data.datasets[0];
+  if(!ds||!curData) return;
+  const base=curData.values;
+  ds.data=base.map(v=>v*(1+(Math.random()-.5)*.012));
+  myChart.update('none');
+}
+setInterval(breatheBars,3000);
+
+/* ══ EXPORT ══ */
+function exportPNG(){
+  if(!myChart) return;
+  const cv=document.getElementById('myChart');
+  const tmp=document.createElement('canvas');
+  tmp.width=cv.width; tmp.height=cv.height;
+  const c=tmp.getContext('2d');
+  c.fillStyle='#ffffff'; c.fillRect(0,0,tmp.width,tmp.height);
+  c.drawImage(cv,0,0);
+  const a=document.createElement('a');
+  a.download='datalens-chart.png'; a.href=tmp.toDataURL('image/png'); a.click();
+  toast('Chart saved as PNG');
+}
+
+function exportCSV(){
+  if(!curData) return;
+  const rows=['Label,Value'];
+  curData.labels.forEach((l,i)=>rows.push(`"${l}",${curData.values[i]}`));
+  const a=document.createElement('a');
+  a.download='datalens-data.csv';
+  a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'}));
+  a.click();
+  toast('Data exported as CSV');
+}
+
+/* ══ TOAST ══ */
+let _tt;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+/* ══ INIT ══ */
+window.addEventListener('load',()=>{
+  loadDS(0, document.querySelector('.ds-item'));
+});
+</script>
+</body>
+</html>
