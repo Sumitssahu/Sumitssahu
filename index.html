@@ -3,402 +3,706 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DataLens — Living Intelligence Dashboard by Sumit Sahu</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<title>DataLens — Visual Intelligence by Sumit Sahu</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
+/* ─────────────────────────────────────────────
+   TOKENS  — every colour/size in one place
+───────────────────────────────────────────── */
 :root{
-  --page:#f2f2f7; --card:#fff; --ink:#1c1c1e; --ink2:#3a3a3c; --ink3:#636366; --ink4:#8e8e93;
-  --rule:#e5e5ea; --rule2:#d1d1d6;
-  --accent:#0071e3; --green:#34c759; --red:#ff3b30; --orange:#ff9500; --purple:#af52de;
-  --sans:'Inter',-apple-system,sans-serif; --mono:'DM Mono',monospace;
-  --sh-sm:0 1px 4px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
-  --sh:0 4px 20px rgba(0,0,0,.09),0 1px 4px rgba(0,0,0,.05);
-  --sh-md:0 8px 40px rgba(0,0,0,.11),0 2px 8px rgba(0,0,0,.06);
-  --sh-lg:0 24px 64px rgba(0,0,0,.13),0 4px 16px rgba(0,0,0,.07);
-  --r:12px; --rsm:8px; --rlg:18px;
+  --bg:      #f2f2f7;
+  --card:    #ffffff;
+  --ink:     #1c1c1e;      /* headings, bold */
+  --ink2:    #3a3a3c;      /* body text */
+  --ink3:    #636366;      /* secondary text */
+  --ink4:    #8e8e93;      /* captions, placeholders */
+  --rule:    #e5e5ea;
+  --rule2:   #d1d1d6;
+  --accent:  #0071e3;
+  --green:   #28a745;
+  --orange:  #e68a00;
+  --red:     #d93025;
+  --purple:  #7b4fba;
+  --sans:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono:    'DM Mono', monospace;
+  --sh0: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+  --sh1: 0 4px 16px rgba(0,0,0,.09), 0 1px 4px rgba(0,0,0,.05);
+  --sh2: 0 8px 32px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.06);
+  --sh3: 0 20px 56px rgba(0,0,0,.12), 0 4px 14px rgba(0,0,0,.07);
+  --r:   12px;
+  --rsm:  8px;
+  --rlg: 16px;
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:16px;-webkit-font-smoothing:antialiased}
-body{background:var(--page);color:var(--ink);font-family:var(--sans);min-height:100vh;overflow-x:hidden;position:relative}
-::-webkit-scrollbar{width:3px;height:3px}
-::-webkit-scrollbar-track{background:var(--page)}
-::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px}
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+html{ font-size:16px; -webkit-font-smoothing:antialiased; }
+body{ background:var(--bg); color:var(--ink); font-family:var(--sans); overflow-x:hidden; }
 
-/* ── ORBS ── */
-#orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
-.orb{position:absolute;border-radius:50%;filter:blur(72px);opacity:0;animation:orbDrift var(--dur,20s) ease-in-out infinite var(--dl,0s)}
-@keyframes orbDrift{0%{transform:translate(0,0) scale(1);opacity:0}12%{opacity:var(--op,.16)}50%{transform:translate(var(--tx,60px),var(--ty,-40px)) scale(1.12)}88%{opacity:var(--op,.16)}100%{transform:translate(0,0) scale(1);opacity:0}}
+::-webkit-scrollbar{ width:4px; height:4px; }
+::-webkit-scrollbar-track{ background:var(--bg); }
+::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.18); border-radius:4px; }
 
-/* ── NAV ── */
-nav{position:sticky;top:0;z-index:200;height:52px;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between;padding:0 28px}
-.nav-logo{display:flex;align-items:center;gap:10px}
-.nav-mark{width:28px;height:28px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,113,227,.35)}
-.nav-mark svg{width:16px;height:16px;fill:#fff}
-.nav-brand{font:600 15px/1 var(--sans);color:var(--ink);letter-spacing:-.3px}
-.nav-brand span{color:var(--accent)}
+/* ─── AMBIENT ORBS ─── */
+#orbs{ position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.orb{ position:absolute; border-radius:50%; filter:blur(80px); opacity:0;
+  animation:od var(--d,20s) ease-in-out infinite var(--dl,0s); }
+@keyframes od{
+  0%,100%{ transform:translate(0,0) scale(1); opacity:0; }
+  15%{ opacity:var(--op,.14); }
+  50%{ transform:translate(var(--tx,50px),var(--ty,-40px)) scale(1.1); }
+  85%{ opacity:var(--op,.14); }
+}
 
-/* NAV TABS — fixed: now actually switch views */
-.nav-tabs{display:flex;gap:2px;background:rgba(0,0,0,.06);padding:3px;border-radius:22px}
-.nav-tab{padding:5px 16px;border-radius:18px;border:none;font:500 13px/1 var(--sans);cursor:pointer;transition:all .2s;background:transparent;color:var(--ink3)}
-.nav-tab.on{background:#fff;color:var(--ink);box-shadow:var(--sh-sm)}
+/* ─── NAV ─── */
+nav{
+  position:sticky; top:0; z-index:200; height:54px;
+  background:rgba(255,255,255,.88);
+  backdrop-filter:saturate(200%) blur(20px);
+  border-bottom:1px solid var(--rule);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 28px;
+}
+.nav-logo{ display:flex; align-items:center; gap:9px; }
+.nav-mark{
+  width:30px; height:30px; border-radius:8px; background:var(--accent);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 2px 8px rgba(0,113,227,.35);
+}
+.nav-mark svg{ width:17px; height:17px; fill:#fff; }
+.nav-brand{ font:700 16px/1 var(--sans); color:var(--ink); letter-spacing:-.4px; }
+.nav-brand span{ color:var(--accent); }
+.nav-tabs{
+  display:flex; gap:2px;
+  background:rgba(0,0,0,.07); padding:3px; border-radius:24px;
+}
+.nav-tab{
+  padding:6px 18px; border-radius:20px; border:none;
+  font:500 13px/1 var(--sans); cursor:pointer;
+  background:transparent; color:var(--ink3); transition:all .2s;
+}
+.nav-tab.on{ background:#fff; color:var(--ink); box-shadow:var(--sh0); }
+.nav-r{ display:flex; align-items:center; gap:10px; }
+.live-pill{
+  display:flex; align-items:center; gap:5px;
+  font:500 12px/1 var(--mono); color:var(--green);
+  padding:5px 12px; border-radius:20px;
+  border:1px solid rgba(40,167,69,.25); background:rgba(40,167,69,.07);
+}
+.live-d{
+  width:6px; height:6px; border-radius:50%; background:var(--green);
+  animation:lp 1.4s ease-in-out infinite;
+}
+@keyframes lp{ 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.65)} }
+.by-badge{
+  font:400 11px/1 var(--mono); color:var(--ink3);
+  padding:5px 12px; border:1px solid var(--rule2); border-radius:20px;
+}
+.by-badge strong{ color:var(--accent); font-weight:600; }
+.nav-btn{
+  padding:7px 18px; border-radius:20px; border:none;
+  background:var(--accent); color:#fff;
+  font:600 13px/1 var(--sans); cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,113,227,.3); transition:all .18s;
+}
+.nav-btn:hover{ background:#0077ed; transform:translateY(-1px); box-shadow:0 4px 14px rgba(0,113,227,.4); }
 
-.nav-r{display:flex;align-items:center;gap:10px}
-.live-pill{display:flex;align-items:center;gap:5px;font:500 11px/1 var(--mono);color:var(--green);padding:4px 10px;border-radius:20px;border:1px solid rgba(52,199,89,.25);background:rgba(52,199,89,.06)}
-.live-d{width:6px;height:6px;border-radius:50%;background:var(--green);animation:lp 1.4s ease-in-out infinite}
-@keyframes lp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.65)}}
-.by-badge{font:400 11px/1 var(--mono);color:var(--ink4);padding:4px 10px;border:1px solid var(--rule2);border-radius:20px}
-.by-badge strong{color:var(--accent);font-weight:500}
-.nav-btn{padding:6px 16px;border-radius:20px;border:none;background:var(--accent);color:#fff;font:500 13px/1 var(--sans);cursor:pointer;box-shadow:0 2px 8px rgba(0,113,227,.3);transition:all .18s}
-.nav-btn:hover{background:#0077ed;transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,113,227,.4)}
+/* ─── HERO ─── */
+.hero{
+  padding:22px 28px 18px;
+  display:flex; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:12px;
+  position:relative; z-index:10;
+}
+.hero-eyebrow{
+  font:500 11px/1 var(--mono); color:var(--accent);
+  letter-spacing:.1em; text-transform:uppercase; margin-bottom:5px;
+}
+.hero-title{ font:700 24px/1.1 var(--sans); color:var(--ink); letter-spacing:-.4px; }
+.hero-sub{ font:400 12px/1 var(--mono); color:var(--ink3); margin-top:4px; letter-spacing:.02em; }
+.hbtns{ display:flex; gap:8px; flex-wrap:wrap; }
+.btn{
+  padding:8px 18px; border-radius:var(--rsm);
+  border:1px solid var(--rule2); background:#fff;
+  color:var(--ink2); font:500 13px/1 var(--sans);
+  cursor:pointer; transition:all .18s; box-shadow:var(--sh0);
+}
+.btn:hover{ box-shadow:var(--sh1); transform:translateY(-1px); }
+.btn-p{
+  background:var(--accent); color:#fff; border-color:var(--accent);
+  box-shadow:0 2px 10px rgba(0,113,227,.3);
+}
+.btn-p:hover{ background:#0077ed; box-shadow:0 4px 16px rgba(0,113,227,.4); }
 
-/* ── HERO ── */
-.hero{padding:24px 28px 0;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:14px;position:relative;z-index:10}
-.hero-eyebrow{font:500 11px/1 var(--mono);color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
-.hero-title{font:700 26px/1.1 var(--sans);color:var(--ink);letter-spacing:-.5px}
-.hero-sub{font:400 11px/1 var(--mono);color:var(--ink4);letter-spacing:.04em;margin-top:4px}
-.hbtns{display:flex;gap:8px;flex-wrap:wrap}
-.btn{padding:7px 16px;border-radius:var(--rsm);border:1px solid var(--rule2);background:var(--card);color:var(--ink2);font:500 13px/1 var(--sans);cursor:pointer;transition:all .18s;box-shadow:var(--sh-sm)}
-.btn:hover{background:#fff;box-shadow:var(--sh);transform:translateY(-1px)}
-.btn-p{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 10px rgba(0,113,227,.3)}
-.btn-p:hover{background:#0077ed;box-shadow:0 4px 18px rgba(0,113,227,.4)}
+/* ─── MARQUEE  (FIX 1: compact, non-disruptive) ─── */
+.mq-wrap{
+  /* fixed, compact height — does NOT push main layout */
+  height:76px;
+  background:#fff;
+  border-top:1px solid var(--rule);
+  border-bottom:1px solid var(--rule);
+  box-shadow:0 2px 8px rgba(0,0,0,.05), inset 0 -1px 0 rgba(0,0,0,.03);
+  overflow:hidden;
+  position:relative; z-index:10;
+  display:flex; flex-direction:column; justify-content:center; gap:6px;
+  padding:8px 0;
+}
+.mq-wrap::before,.mq-wrap::after{
+  content:''; position:absolute; top:0; bottom:0; width:100px; z-index:2; pointer-events:none;
+}
+.mq-wrap::before{ left:0; background:linear-gradient(90deg,#fff 60%,transparent); }
+.mq-wrap::after{  right:0; background:linear-gradient(-90deg,#fff 60%,transparent); }
 
-/* ── MARQUEE ── */
-.marquee-wrap{padding:16px 0;background:#fff;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);overflow:hidden;position:relative;z-index:10;box-shadow:0 2px 12px rgba(0,0,0,.05),0 -1px 0 rgba(0,0,0,.03)}
-.marquee-wrap::before,.marquee-wrap::after{content:'';position:absolute;top:0;bottom:0;width:80px;z-index:2;pointer-events:none}
-.marquee-wrap::before{left:0;background:linear-gradient(90deg,#fff,transparent)}
-.marquee-wrap::after{right:0;background:linear-gradient(-90deg,#fff,transparent)}
-.marquee-row{display:flex;gap:10px;width:max-content;margin-bottom:8px}
-.marquee-row:last-child{margin-bottom:0}
-.marquee-row.left{animation:mLeft 32s linear infinite}
-.marquee-row.right{animation:mRight 28s linear infinite}
-@keyframes mLeft{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@keyframes mRight{from{transform:translateX(-50%)}to{transform:translateX(0)}}
-.marquee-wrap:hover .marquee-row{animation-play-state:paused}
-.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:100px;border:1px solid var(--rule2);background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);white-space:nowrap;flex-shrink:0;transition:box-shadow .2s,transform .2s;cursor:default}
-.chip:hover{box-shadow:0 4px 14px rgba(0,0,0,.1);transform:translateY(-1px)}
-.chip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.chip-text{font:500 12px/1 var(--sans);color:var(--ink2);letter-spacing:-.1px}
-.chip-val{font:600 12px/1 var(--sans);color:var(--ink)}
-/* ── STATS ── */
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:18px 28px 0;position:relative;z-index:10}
-.stat-card{background:var(--card);border-radius:var(--r);border:1px solid var(--rule);padding:15px 17px;box-shadow:var(--sh-sm);position:relative;overflow:hidden;transition:box-shadow .25s,transform .25s;cursor:default}
-.stat-card:hover{box-shadow:var(--sh);transform:translateY(-3px) scale(1.01)}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--sc,var(--accent));border-radius:var(--r) var(--r) 0 0}
-.stat-card::after{content:'';position:absolute;top:-50%;left:-60%;width:40%;height:200%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);animation:shine 5s ease-in-out infinite var(--sd,0s);pointer-events:none}
-@keyframes shine{0%,75%,100%{left:-60%;opacity:0}77%{opacity:1}90%{left:130%;opacity:1}92%{opacity:0}}
-.sl{font:500 11px/1 var(--sans);color:var(--ink4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px}
-.sv{font:700 22px/1 var(--sans);color:var(--ink);letter-spacing:-.4px}
-.ss{font:400 11px/1 var(--sans);color:var(--ink4);margin-top:3px}
-.ticker{position:absolute;top:13px;right:13px;font:500 9px/1 var(--mono);padding:2px 6px;border-radius:4px;transition:all .4s}
-.t-up{background:rgba(52,199,89,.12);color:#15803d}
-.t-dn{background:rgba(255,59,48,.10);color:#b91c1c}
-.t-fl{background:var(--rule);color:var(--ink4)}
+.mq-row{ display:flex; gap:9px; width:max-content; align-items:center; }
+.mq-row.go-l{ animation:mqL 36s linear infinite; }
+.mq-row.go-r{ animation:mqR 30s linear infinite; }
+.mq-wrap:hover .mq-row{ animation-play-state:paused; }
 
-/* ── MAIN ── */
-.main-wrap{display:grid;grid-template-columns:256px 1fr;gap:14px;padding:14px 28px 28px;position:relative;z-index:10}
-.sidebar{display:flex;flex-direction:column;gap:11px}
-.panel{background:var(--card);border-radius:var(--rlg);border:1px solid var(--rule);box-shadow:var(--sh-sm);overflow:hidden;transition:box-shadow .2s}
-.panel:hover{box-shadow:var(--sh)}
-.phd{padding:12px 15px 10px;border-bottom:1px solid var(--rule);font:600 12px/1 var(--sans);color:var(--ink2)}
-.pbd{padding:10px}
+@keyframes mqL{ from{transform:translateX(0)} to{transform:translateX(-50%)} }
+@keyframes mqR{ from{transform:translateX(-50%)} to{transform:translateX(0)} }
 
-/* datasets */
-.dsi{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:var(--rsm);cursor:pointer;transition:all .15s;margin-bottom:2px;border:1px solid transparent}
-.dsi:hover{background:var(--page)}
-.dsi.on{background:rgba(0,113,227,.06);border-color:rgba(0,113,227,.18)}
-.ds-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.dn{font:500 12px/1.3 var(--sans);color:var(--ink);margin-bottom:2px}
-.dsi.on .dn{color:var(--accent)}
-.dm{font:400 10px/1 var(--mono);color:var(--ink4)}
+/* FIX 2: chip — fully readable text, good contrast */
+.chip{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:5px 13px; border-radius:100px;
+  border:1px solid var(--rule2); background:#fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);
+  white-space:nowrap; flex-shrink:0;
+  cursor:default; transition:box-shadow .2s, transform .2s;
+}
+.chip:hover{ box-shadow:0 4px 12px rgba(0,0,0,.12); transform:translateY(-1px); }
+.cdot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.clabel{
+  font:400 12px/1 var(--sans);
+  color:var(--ink3);   /* readable muted — not too light */
+}
+.cval{
+  font:600 12px/1 var(--sans);
+  color:var(--ink);    /* strong dark for the number */
+}
 
-/* chart type */
-.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-.tb{padding:9px 6px;border-radius:var(--rsm);border:1px solid var(--rule);background:transparent;cursor:pointer;transition:all .18s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px}
-.tb:hover{background:var(--page);border-color:var(--rule2)}
-.tb.on{border-color:var(--accent);background:rgba(0,113,227,.06)}
-.ti{font-size:17px;line-height:1}
-.tl{font:500 10px/1 var(--sans);color:var(--ink2)}
-.tb.on .tl{color:var(--accent)}
+/* ─── STAT CARDS ─── */
+.stats-row{
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:12px; padding:0 28px 14px;
+  position:relative; z-index:10;
+}
+.sc{
+  background:#fff; border-radius:var(--r);
+  border:1px solid var(--rule); padding:16px 18px;
+  box-shadow:var(--sh0); position:relative; overflow:hidden;
+  transition:box-shadow .25s, transform .25s; cursor:default;
+}
+.sc:hover{ box-shadow:var(--sh1); transform:translateY(-3px) scale(1.01); }
+.sc::before{
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:var(--sc,var(--accent));
+  border-radius:var(--r) var(--r) 0 0;
+}
+/* shine sweep */
+.sc::after{
+  content:''; position:absolute;
+  top:-50%; left:-70%; width:40%; height:200%;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.5),transparent);
+  transform:skewX(-20deg); pointer-events:none;
+  animation:shine 6s ease-in-out infinite var(--sd,0s);
+}
+@keyframes shine{ 0%,78%,100%{left:-70%;opacity:0} 80%{opacity:1} 90%{left:130%;opacity:1} 92%{opacity:0} }
 
-/* swatches */
-.sw-row{display:flex;gap:7px;flex-wrap:wrap}
-.sw{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;box-shadow:var(--sh-sm);transition:all .2s}
-.sw:hover{transform:scale(1.18);box-shadow:var(--sh)}
-.sw.on{border-color:var(--ink);transform:scale(1.12)}
+.sc-label{ font:500 11px/1 var(--sans); color:var(--ink4); text-transform:uppercase; letter-spacing:.05em; margin-bottom:7px; }
+.sc-val{   font:700 22px/1 var(--sans); color:var(--ink); letter-spacing:-.4px; }
+.sc-sub{   font:400 11px/1 var(--sans); color:var(--ink4); margin-top:3px; }
+.ticker{
+  position:absolute; top:12px; right:12px;
+  font:500 10px/1 var(--mono); padding:2px 7px; border-radius:4px; transition:all .4s;
+}
+.t-up{ background:rgba(40,167,69,.12); color:#1a6631; }
+.t-dn{ background:rgba(217,48,37,.10); color:#9c1f18; }
+.t-fl{ background:var(--rule); color:var(--ink4); }
 
-/* ── UPLOAD ZONE ── */
-.upload-zone{border:1.5px dashed var(--rule2);border-radius:var(--r);padding:16px 12px;text-align:center;cursor:pointer;transition:all .2s;background:var(--page);position:relative}
-.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(0,113,227,.04)}
-.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.uz-icon{font-size:22px;margin-bottom:6px}
-.uz-title{font:600 12px/1 var(--sans);color:var(--ink2);margin-bottom:3px}
-.uz-sub{font:400 10px/1.4 var(--sans);color:var(--ink4)}
-.uz-formats{display:flex;gap:4px;justify-content:center;margin-top:8px}
-.uz-tag{font:500 9px/1 var(--mono);padding:2px 7px;border-radius:4px;letter-spacing:.04em}
-.ut-xlsx{background:#e8f5e9;color:#2e7d32}
-.ut-csv{background:#e3f2fd;color:#1565c0}
-.ut-paste{background:#f3e5f5;color:#6a1b9a}
+/* ─── MAIN GRID ─── */
+.main-grid{
+  display:grid; grid-template-columns:252px 1fr;
+  gap:14px; padding:0 28px 28px;
+  position:relative; z-index:10;
+}
 
-/* paste fallback */
-.paste-ta{width:100%;min-height:70px;resize:vertical;background:var(--page);border:1px solid var(--rule2);border-radius:var(--rsm);color:var(--ink);font:400 10px/1.6 var(--mono);padding:9px;outline:none;transition:border-color .18s,box-shadow .18s;margin-top:8px}
-.paste-ta:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,113,227,.1)}
-.paste-ta::placeholder{color:var(--ink4)}
-.go-btn{width:100%;margin-top:7px;padding:8px;background:var(--accent);color:#fff;border:none;border-radius:var(--rsm);font:600 11px/1 var(--sans);cursor:pointer;transition:all .18s;box-shadow:0 2px 8px rgba(0,113,227,.25)}
-.go-btn:hover{background:#0077ed;box-shadow:0 4px 14px rgba(0,113,227,.4)}
+/* ─── SIDEBAR ─── */
+.sidebar{ display:flex; flex-direction:column; gap:11px; }
+.panel{
+  background:#fff; border-radius:var(--rlg);
+  border:1px solid var(--rule); box-shadow:var(--sh0); overflow:hidden;
+  transition:box-shadow .2s;
+}
+.panel:hover{ box-shadow:var(--sh1); }
+.phd{ padding:12px 15px 10px; border-bottom:1px solid var(--rule); font:600 13px/1 var(--sans); color:var(--ink2); }
+.pbd{ padding:10px; }
 
-/* ── CHART PANEL ── */
-.chart-panel{background:var(--card);border-radius:var(--rlg);border:1px solid var(--rule);box-shadow:var(--sh-lg);display:flex;flex-direction:column;overflow:hidden}
+/* dataset items */
+.dsi{
+  display:flex; align-items:center; gap:9px;
+  padding:9px 10px; border-radius:var(--rsm);
+  cursor:pointer; transition:all .15s; margin-bottom:2px;
+  border:1px solid transparent;
+}
+.dsi:hover{ background:var(--bg); }
+.dsi.on{ background:rgba(0,113,227,.06); border-color:rgba(0,113,227,.2); }
+.ds-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.ds-name{ font:500 12px/1.3 var(--sans); color:var(--ink); margin-bottom:2px; }
+.dsi.on .ds-name{ color:var(--accent); }
+.ds-meta{ font:400 10px/1 var(--mono); color:var(--ink4); }
 
-/* macOS chrome */
-.mac{background:linear-gradient(180deg,#2a2a2e,#1c1c1e);padding:11px 17px 10px;display:flex;align-items:center;border-bottom:1px solid rgba(255,255,255,.06);position:relative;flex-shrink:0}
-.mac-dots{display:flex;gap:6px;align-items:center}
-.md{width:12px;height:12px;border-radius:50%;cursor:default}
-.md.cl{background:#ff5f57}
-.md.mn{background:#febc2e}
-.md.mx{background:#28c840}
-.mac-title{flex:1;text-align:center;font:500 12px/1 var(--sans);color:rgba(255,255,255,.6);padding:0 80px}
-.mac-title strong{color:rgba(255,255,255,.85);font-weight:500}
-.mac-btns{display:flex;gap:5px}
-.mb{padding:4px 11px;border-radius:13px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.07);color:rgba(255,255,255,.75);font:500 10px/1 var(--sans);cursor:pointer;transition:all .18s}
-.mb:hover{background:rgba(255,255,255,.14);color:#fff}
-.mb.go{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 1px 6px rgba(0,113,227,.4)}
-.mac-bar{position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,113,227,.6) 30%,rgba(52,199,89,.5) 60%,transparent);animation:mbar 3s ease-in-out infinite}
-@keyframes mbar{0%,100%{opacity:.4;transform:scaleX(.6)}50%{opacity:1;transform:scaleX(1)}}
+/* chart type grid */
+.tgrid{ display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+.tb{
+  padding:10px 6px; border-radius:var(--rsm);
+  border:1px solid var(--rule); background:transparent;
+  cursor:pointer; transition:all .18s; text-align:center;
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+}
+.tb:hover{ background:var(--bg); border-color:var(--rule2); }
+.tb.on{ border-color:var(--accent); background:rgba(0,113,227,.06); }
+.tb .ti{ font-size:18px; line-height:1; }
+.tb .tl{ font:500 11px/1 var(--sans); color:var(--ink2); }
+.tb.on .tl{ color:var(--accent); }
 
-/* VIEW PANELS — the three switchable views */
-.view-panel{display:none;flex:1;flex-direction:column}
-.view-panel.on{display:flex}
+/* colour swatches */
+.sw-row{ display:flex; gap:7px; flex-wrap:wrap; }
+.sw{
+  width:26px; height:26px; border-radius:50%; cursor:pointer;
+  border:2.5px solid transparent; box-shadow:var(--sh0); transition:all .2s;
+}
+.sw:hover{ transform:scale(1.18); box-shadow:var(--sh1); }
+.sw.on{ border-color:var(--ink); }
 
-/* chart canvas view */
-.canvas-wrap{padding:22px 26px 10px;flex:1;display:flex;align-items:center;justify-content:center;min-height:300px;position:relative}
-.br{position:absolute;border-radius:50%;border:1px solid rgba(0,113,227,.07);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;animation:bra 4s ease-in-out infinite}
-.br:nth-child(2){width:300px;height:300px;animation-delay:.5s;border-color:rgba(52,199,89,.05)}
-.br:nth-child(3){width:380px;height:380px;animation-delay:1s;border-color:rgba(175,82,222,.04)}
-.br:nth-child(4){width:240px;height:240px}
-@keyframes bra{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.6}50%{transform:translate(-50%,-50%) scale(1.04);opacity:1}}
+/* ─── UPLOAD ZONE  (FIX 3: robust, clear) ─── */
+.upload-zone{
+  border:2px dashed var(--rule2); border-radius:var(--r);
+  padding:18px 14px; text-align:center;
+  cursor:pointer; transition:all .2s;
+  background:var(--bg); position:relative;
+}
+.upload-zone:hover,.upload-zone.drag{
+  border-color:var(--accent); background:rgba(0,113,227,.04);
+}
+.upload-zone input{
+  position:absolute; inset:0; opacity:0;
+  cursor:pointer; width:100%; height:100%;
+}
+.uz-icon{ font-size:24px; margin-bottom:6px; }
+.uz-title{ font:600 13px/1 var(--sans); color:var(--ink2); margin-bottom:4px; }
+.uz-sub{ font:400 11px/1.5 var(--sans); color:var(--ink3); }
+.uz-fmts{ display:flex; gap:5px; justify-content:center; margin-top:8px; }
+.uf{
+  font:500 10px/1 var(--mono); padding:3px 8px; border-radius:4px;
+  letter-spacing:.04em;
+}
+.uf-x{ background:#e8f5e9; color:#2e7d32; }
+.uf-c{ background:#e3f2fd; color:#1565c0; }
+
+/* progress bar for large files */
+.upload-progress{
+  display:none; margin-top:10px;
+  height:4px; background:var(--rule); border-radius:2px; overflow:hidden;
+}
+.upload-progress-bar{
+  height:100%; background:var(--accent); border-radius:2px;
+  width:0%; transition:width .3s ease;
+}
+.upload-status{
+  font:400 11px/1 var(--sans); color:var(--ink3);
+  margin-top:6px; text-align:center; display:none;
+}
+
+/* ─── PASTE AREA (FIX 3: clearer) ─── */
+.paste-section{ margin-top:10px; }
+.paste-label{
+  font:600 11px/1 var(--sans); color:var(--ink2); margin-bottom:5px;
+  display:flex; align-items:center; gap:6px;
+}
+.paste-label::before{ content:''; flex:1; height:1px; background:var(--rule); }
+.paste-label::after{  content:''; flex:1; height:1px; background:var(--rule); }
+.paste-hint{
+  font:400 11px/1.5 var(--sans); color:var(--ink3); margin-bottom:6px;
+}
+.paste-hint code{
+  font:400 10px/1 var(--mono); background:var(--bg);
+  padding:1px 6px; border-radius:4px; color:var(--ink2);
+}
+.paste-ta{
+  width:100%; min-height:80px; resize:vertical;
+  background:#fff; border:1.5px solid var(--rule2);
+  border-radius:var(--rsm); color:var(--ink);
+  font:400 12px/1.6 var(--mono); padding:10px;
+  outline:none; transition:border-color .18s, box-shadow .18s;
+}
+.paste-ta:focus{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,113,227,.1); }
+.paste-ta::placeholder{ color:var(--ink4); }
+.go-btn{
+  width:100%; margin-top:8px; padding:10px;
+  background:var(--accent); color:#fff; border:none;
+  border-radius:var(--rsm); font:600 13px/1 var(--sans);
+  cursor:pointer; transition:all .18s;
+  box-shadow:0 2px 8px rgba(0,113,227,.28);
+}
+.go-btn:hover{ background:#0077ed; box-shadow:0 4px 14px rgba(0,113,227,.38); }
+
+/* ─── CHART PANEL ─── */
+.chart-panel{
+  background:#fff; border-radius:var(--rlg);
+  border:1px solid var(--rule); box-shadow:var(--sh3);
+  display:flex; flex-direction:column;
+  /* FIX 1: explicit min-height so chart always shows properly */
+  min-height:560px;
+  overflow:hidden;
+}
+
+/* macOS window chrome */
+.mac{
+  background:linear-gradient(180deg,#2c2c2e,#1c1c1e);
+  padding:11px 17px; flex-shrink:0;
+  display:flex; align-items:center;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  position:relative;
+}
+.mac-dots{ display:flex; gap:7px; align-items:center; }
+.md{ width:12px; height:12px; border-radius:50%; }
+.md.cl{ background:#ff5f57; }
+.md.mn{ background:#febc2e; }
+.md.mx{ background:#28c840; }
+.mac-title{
+  flex:1; text-align:center;
+  font:500 12px/1 var(--sans); color:rgba(255,255,255,.55); padding:0 70px;
+}
+.mac-title strong{ color:rgba(255,255,255,.88); font-weight:600; }
+.mac-btns{ display:flex; gap:5px; }
+.mb{
+  padding:4px 12px; border-radius:14px;
+  border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.07);
+  color:rgba(255,255,255,.75); font:500 10px/1 var(--sans); cursor:pointer;
+  transition:all .18s; letter-spacing:.02em;
+}
+.mb:hover{ background:rgba(255,255,255,.15); color:#fff; border-color:rgba(255,255,255,.28); }
+.mb.go{ background:var(--accent); border-color:var(--accent); color:#fff; }
+.mb.go:hover{ background:#0077ed; }
+.mac-bar{
+  position:absolute; bottom:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,113,227,.7) 30%,rgba(40,167,69,.5) 60%,transparent);
+  animation:mb 3s ease-in-out infinite;
+}
+@keyframes mb{ 0%,100%{opacity:.4;transform:scaleX(.5)} 50%{opacity:1;transform:scaleX(1)} }
+
+/* ── VIEW PANELS (Charts / Table / Insights) ── */
+.view-panel{ display:none; flex:1; flex-direction:column; overflow:hidden; }
+.view-panel.on{ display:flex; }
+
+/* CHART VIEW */
+.canvas-wrap{
+  /* FIX 1: flex-shrink:0 + explicit height so canvas doesn't collapse */
+  padding:20px 24px 12px;
+  flex:1; display:flex; align-items:center; justify-content:center;
+  min-height:280px; position:relative;
+}
+.br{
+  position:absolute; border-radius:50%;
+  border:1px solid rgba(0,113,227,.07);
+  top:50%; left:50%; transform:translate(-50%,-50%);
+  pointer-events:none; animation:bra 4s ease-in-out infinite;
+}
+.br:nth-child(2){ width:280px;height:280px;animation-delay:.5s;border-color:rgba(40,167,69,.05); }
+.br:nth-child(3){ width:360px;height:360px;animation-delay:1s;border-color:rgba(175,82,222,.04); }
+.br:nth-child(4){ width:210px;height:210px; }
+@keyframes bra{ 0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.6} 50%{transform:translate(-50%,-50%) scale(1.04);opacity:1} }
+
+/* insight strip under chart */
+.ins-strip{
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:1px; background:var(--rule);
+  border-top:1px solid var(--rule);
+  flex-shrink:0;
+}
+.is-cell{
+  background:#fff; padding:11px 16px;
+  display:flex; align-items:flex-start; gap:8px;
+}
+.is-pip{ width:5px;height:5px;border-radius:50%;margin-top:5px;flex-shrink:0; }
+/* FIX 2: insight text clear and readable */
+.is-txt{ font:400 12px/1.55 var(--sans); color:var(--ink2); }
+.is-txt strong{ font-weight:600; color:var(--ink); }
 
 /* TABLE VIEW */
-.tbl-view{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.tbl-top{padding:14px 20px;border-bottom:1px solid var(--rule);background:#fafafa;display:flex;align-items:center;justify-content:space-between}
-.tbl-title{font:600 13px/1 var(--sans);color:var(--ink2)}
-.tbl-ct{font:400 11px/1 var(--mono);color:var(--ink4)}
-.tbl-scroll{overflow:auto;flex:1;max-height:400px}
-table{width:100%;border-collapse:collapse}
-thead th{padding:9px 18px;text-align:left;background:#f9f9f9;font:600 10px/1 var(--sans);color:var(--ink4);letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--rule);position:sticky;top:0;white-space:nowrap}
-tbody td{padding:9px 18px;border-bottom:1px solid var(--rule);font:400 12px/1 var(--sans);color:var(--ink2);white-space:nowrap}
-tbody tr:last-child td{border-bottom:none}
-tbody tr:hover td{background:rgba(0,113,227,.025)}
-.td-n{font:600 12px/1 var(--mono);color:var(--accent);text-align:right}
-.td-bt{height:5px;background:var(--rule);border-radius:3px;overflow:hidden;width:90px}
-.td-bf{height:100%;background:var(--accent);border-radius:3px;transition:width .9s cubic-bezier(.23,1,.32,1)}
-.r1n{font-weight:600;color:var(--accent)}
+.tbl-view{ flex:1;display:flex;flex-direction:column;overflow:hidden; }
+.tbl-top{
+  padding:13px 20px; border-bottom:1px solid var(--rule);
+  background:#fafafa; display:flex; align-items:center; justify-content:space-between;
+  flex-shrink:0;
+}
+/* FIX 2: table header text readable */
+.tbl-title{ font:600 13px/1 var(--sans); color:var(--ink2); }
+.tbl-ct{ font:400 11px/1 var(--mono); color:var(--ink3); }
+.tbl-scroll{ overflow:auto; flex:1; }
+table{ width:100%; border-collapse:collapse; }
+thead th{
+  padding:9px 18px; text-align:left; background:#f5f5f7;
+  font:600 11px/1 var(--sans); color:var(--ink3);    /* FIX 2 */
+  letter-spacing:.04em; text-transform:uppercase;
+  border-bottom:1px solid var(--rule); position:sticky; top:0;
+}
+tbody td{
+  padding:9px 18px; border-bottom:1px solid var(--rule);
+  font:400 13px/1 var(--sans); color:var(--ink2);    /* FIX 2: 13px not 10px */
+}
+tbody tr:last-child td{ border-bottom:none; }
+tbody tr:hover td{ background:rgba(0,113,227,.025); }
+.td-num{ font:600 13px/1 var(--mono); color:var(--accent); text-align:right; }
+.td-bt{ height:5px; background:var(--rule); border-radius:3px; overflow:hidden; width:90px; }
+.td-bf{ height:100%; background:var(--accent); border-radius:3px; transition:width .9s cubic-bezier(.23,1,.32,1); }
+.r1n{ font-weight:600; color:var(--accent); }
 
 /* INSIGHTS VIEW */
-.ins-view{flex:1;overflow-y:auto;padding:20px 24px}
-.ins-hero{background:linear-gradient(135deg,#0071e3,#34aadc);border-radius:var(--r);padding:20px 22px;margin-bottom:16px;color:#fff}
-.ins-hero-label{font:500 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:8px}
-.ins-hero-val{font:800 38px/1 var(--sans);letter-spacing:-.8px;margin-bottom:4px}
-.ins-hero-sub{font:400 12px/1 var(--sans);opacity:.75}
-.ins-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.ins-card{background:var(--page);border-radius:var(--r);padding:14px 16px;border:1px solid var(--rule)}
-.ins-card-label{font:500 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink4);margin-bottom:6px}
-.ins-card-val{font:700 20px/1 var(--sans);color:var(--ink);letter-spacing:-.3px;margin-bottom:3px}
-.ins-card-desc{font:400 11px/1.5 var(--sans);color:var(--ink3)}
-.ins-findings{display:flex;flex-direction:column;gap:8px}
-.ins-finding{background:var(--page);border-radius:var(--r);padding:12px 14px;border:1px solid var(--rule);display:flex;gap:10px;align-items:flex-start;transition:box-shadow .2s}
-.ins-finding:hover{box-shadow:var(--sh-sm)}
-.ins-pip{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
-.ins-finding-text{font:400 12px/1.6 var(--sans);color:var(--ink2)}
-.ins-finding-text strong{font-weight:600;color:var(--ink)}
-.ins-rank-badge{margin-left:auto;font:600 10px/1 var(--mono);padding:2px 7px;border-radius:4px;flex-shrink:0;margin-top:2px}
+.ins-view{ flex:1; overflow-y:auto; padding:20px 24px; }
+.ins-hero{
+  background:linear-gradient(135deg,#0071e3 0%,#34aadc 100%);
+  border-radius:var(--r); padding:20px 22px; margin-bottom:14px; color:#fff;
+}
+.ins-hero-lbl{ font:500 10px/1 var(--mono); letter-spacing:.14em; text-transform:uppercase; opacity:.75; margin-bottom:8px; }
+.ins-hero-val{ font:800 36px/1 var(--sans); letter-spacing:-.7px; margin-bottom:3px; }
+.ins-hero-sub{ font:400 13px/1 var(--sans); opacity:.8; }   /* FIX 2: 13px */
+.ins-kpis{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.ins-kpi{ background:var(--bg); border-radius:var(--r); padding:14px 16px; border:1px solid var(--rule); }
+.ins-kpi-l{ font:500 11px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--ink3); margin-bottom:6px; }  /* FIX 2 */
+.ins-kpi-v{ font:700 20px/1 var(--sans); color:var(--ink); letter-spacing:-.3px; margin-bottom:3px; }
+.ins-kpi-d{ font:400 12px/1.5 var(--sans); color:var(--ink3); }   /* FIX 2: 12px readable */
+.ins-section-title{ font:600 13px/1 var(--sans); color:var(--ink2); margin-bottom:8px; }
+.ins-findings{ display:flex; flex-direction:column; gap:8px; }
+.ins-finding{
+  background:var(--bg); border-radius:var(--r);
+  padding:13px 15px; border:1px solid var(--rule);
+  display:flex; gap:10px; align-items:flex-start; transition:box-shadow .2s;
+}
+.ins-finding:hover{ box-shadow:var(--sh0); }
+.ins-pip{ width:8px; height:8px; border-radius:50%; margin-top:4px; flex-shrink:0; }
+.ins-finding-txt{ font:400 13px/1.6 var(--sans); color:var(--ink2); }   /* FIX 2: 13px */
+.ins-finding-txt strong{ font-weight:600; color:var(--ink); }
+.ins-badge{
+  margin-left:auto; font:600 10px/1 var(--mono);
+  padding:2px 7px; border-radius:4px; flex-shrink:0; margin-top:2px;
+}
 
-/* INSIGHT STRIP (under chart) */
-.ins-strip{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);border-top:1px solid var(--rule)}
-.is-cell{background:var(--card);padding:11px 17px;display:flex;align-items:flex-start;gap:8px}
-.is-pip{width:5px;height:5px;border-radius:50%;margin-top:5px;flex-shrink:0}
-.is-txt{font:400 11px/1.55 var(--sans);color:var(--ink2)}
-.is-txt strong{font-weight:600;color:var(--ink)}
+/* ─── TOAST ─── */
+.toast{
+  position:fixed; bottom:24px; right:24px;
+  background:var(--ink); color:#fff;
+  padding:11px 20px; border-radius:24px;
+  font:500 13px/1 var(--sans); box-shadow:var(--sh3);
+  z-index:999; opacity:0; transform:translateY(12px);
+  transition:all .25s; pointer-events:none;
+}
+.toast.on{ opacity:1; transform:translateY(0); }
 
-/* toast */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:10px 18px;border-radius:20px;font:500 12px/1 var(--sans);box-shadow:var(--sh-lg);z-index:999;opacity:0;transform:translateY(12px);transition:all .25s;pointer-events:none}
-.toast.on{opacity:1;transform:translateY(0)}
-
-@media(max-width:860px){.main-wrap{grid-template-columns:1fr}.stats-row{grid-template-columns:1fr 1fr}.ins-grid{grid-template-columns:1fr}.ins-strip{grid-template-columns:1fr}}
+/* ─── RESPONSIVE ─── */
+@media(max-width:900px){
+  .main-grid{ grid-template-columns:1fr; }
+  .stats-row{ grid-template-columns:1fr 1fr; }
+  .ins-strip{ grid-template-columns:1fr; }
+  .ins-kpis{ grid-template-columns:1fr; }
+}
 </style>
 </head>
 <body>
 
-<!-- orbs -->
+<!-- ORBS -->
 <div id="orbs">
-  <div class="orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(0,113,227,.2),transparent 70%);top:-100px;left:-100px;--dur:22s;--tx:80px;--ty:60px;--op:.2"></div>
-  <div class="orb" style="width:380px;height:380px;background:radial-gradient(circle,rgba(52,199,89,.16),transparent 70%);top:30%;right:-80px;--dur:18s;--dl:4s;--tx:-60px;--ty:80px;--op:.16"></div>
-  <div class="orb" style="width:440px;height:440px;background:radial-gradient(circle,rgba(175,82,222,.13),transparent 70%);bottom:-80px;left:28%;--dur:25s;--dl:8s;--tx:40px;--ty:-60px;--op:.13"></div>
-  <div class="orb" style="width:280px;height:280px;background:radial-gradient(circle,rgba(255,149,0,.11),transparent 70%);bottom:20%;right:18%;--dur:20s;--dl:2s;--tx:-40px;--ty:40px;--op:.11"></div>
+  <div class="orb" style="width:480px;height:480px;background:radial-gradient(circle,rgba(0,113,227,.18),transparent 70%);top:-100px;left:-80px;--d:22s;--tx:70px;--ty:50px;--op:.18"></div>
+  <div class="orb" style="width:360px;height:360px;background:radial-gradient(circle,rgba(40,167,69,.14),transparent 70%);top:35%;right:-60px;--d:18s;--dl:5s;--tx:-55px;--ty:70px;--op:.14"></div>
+  <div class="orb" style="width:420px;height:420px;background:radial-gradient(circle,rgba(175,82,222,.12),transparent 70%);bottom:-60px;left:32%;--d:26s;--dl:9s;--tx:35px;--ty:-55px;--op:.12"></div>
+  <div class="orb" style="width:260px;height:260px;background:radial-gradient(circle,rgba(230,138,0,.10),transparent 70%);bottom:22%;right:22%;--d:21s;--dl:3s;--tx:-35px;--ty:35px;--op:.10"></div>
 </div>
 
-<!-- nav -->
+<!-- NAV -->
 <nav>
   <div class="nav-logo">
-    <div class="nav-mark"><svg viewBox="0 0 16 16"><path d="M2 12h2V8H2v4zm3 0h2V4H5v8zm3 0h2V6H8v6zm3 0h2V2h-2v10z"/></svg></div>
+    <div class="nav-mark">
+      <svg viewBox="0 0 16 16"><path d="M2 12h2V8H2v4zm3 0h2V4H5v8zm3 0h2V6H8v6zm3 0h2V2h-2v10z"/></svg>
+    </div>
     <div class="nav-brand">Data<span>Lens</span></div>
   </div>
-
-  <!-- FIXED TABS — each switches the view properly -->
   <div class="nav-tabs">
     <button class="nav-tab on" onclick="switchView('chart',this)">Charts</button>
-    <button class="nav-tab" onclick="switchView('table',this)">Table</button>
-    <button class="nav-tab" onclick="switchView('insights',this)">Insights</button>
+    <button class="nav-tab"    onclick="switchView('table',this)">Table</button>
+    <button class="nav-tab"    onclick="switchView('insights',this)">Insights</button>
   </div>
-
   <div class="nav-r">
     <div class="live-pill"><div class="live-d"></div>Live</div>
     <div class="by-badge">by <strong>Sumit Sahu</strong></div>
-    <button class="nav-btn" onclick="exportPNG()">Export PNG</button>
+    <button class="nav-btn" onclick="doExportPNG()">Export PNG</button>
   </div>
 </nav>
 
-<!-- hero -->
+<!-- HERO -->
 <div class="hero">
   <div>
     <div class="hero-eyebrow">Visual Intelligence Studio</div>
     <div class="hero-title" id="heroTitle">India Salary Benchmarks 2025</div>
-    <div class="hero-sub" id="heroSub">ANALYST ROLES · ANNUAL PACKAGE IN LAKHS</div>
+    <div class="hero-sub"   id="heroSub">ANALYST ROLES · ANNUAL PACKAGE IN LAKHS</div>
   </div>
   <div class="hbtns">
-    <button class="btn" onclick="animChart()">▶ Replay</button>
-    <button class="btn" onclick="exportCSV()">Export CSV</button>
-    <button class="btn btn-p" onclick="exportPNG()">Export PNG</button>
+    <button class="btn"   onclick="animChart()">▶ Replay</button>
+    <button class="btn"   onclick="doExportCSV()">Export CSV</button>
+    <button class="btn btn-p" onclick="doExportPNG()">Export PNG</button>
   </div>
 </div>
 
-<!-- marquee strip -->
-<div class="marquee-wrap">
-  <div class="marquee-row left" id="mRow1"></div>
-  <div class="marquee-row right" id="mRow2"></div>
+<!-- MARQUEE (compact, non-disruptive) -->
+<div class="mq-wrap">
+  <div class="mq-row go-l" id="mRow1"></div>
+  <div class="mq-row go-r" id="mRow2"></div>
 </div>
 
-<!-- stats -->
+<!-- STAT CARDS -->
 <div class="stats-row">
-  <div class="stat-card" style="--sc:var(--accent);--sd:0s" onmousemove="tilt(this,event)" onmouseleave="untilt(this)">
+  <div class="sc" style="--sc:var(--accent);--sd:0s"   onmousemove="tilt(this,event)" onmouseleave="untilt(this)">
     <div class="ticker t-fl" id="tk0">—</div>
-    <div class="sl">Highest</div><div class="sv" id="sv0">—</div><div class="ss" id="ss0">—</div>
+    <div class="sc-label">Highest</div>
+    <div class="sc-val" id="sv0">—</div>
+    <div class="sc-sub" id="ss0">—</div>
   </div>
-  <div class="stat-card" style="--sc:var(--green);--sd:1.2s" onmousemove="tilt(this,event)" onmouseleave="untilt(this)">
+  <div class="sc" style="--sc:var(--green);--sd:1.2s"  onmousemove="tilt(this,event)" onmouseleave="untilt(this)">
     <div class="ticker t-fl" id="tk1">—</div>
-    <div class="sl">Average</div><div class="sv" id="sv1">—</div><div class="ss">All data points</div>
+    <div class="sc-label">Average</div>
+    <div class="sc-val" id="sv1">—</div>
+    <div class="sc-sub">All data points</div>
   </div>
-  <div class="stat-card" style="--sc:var(--orange);--sd:2.4s" onmousemove="tilt(this,event)" onmouseleave="untilt(this)">
+  <div class="sc" style="--sc:var(--orange);--sd:2.4s" onmousemove="tilt(this,event)" onmouseleave="untilt(this)">
     <div class="ticker t-fl" id="tk2">—</div>
-    <div class="sl">Lowest</div><div class="sv" id="sv2">—</div><div class="ss" id="ss2">—</div>
+    <div class="sc-label">Lowest</div>
+    <div class="sc-val" id="sv2">—</div>
+    <div class="sc-sub" id="ss2">—</div>
   </div>
-  <div class="stat-card" style="--sc:var(--purple);--sd:3.6s" onmousemove="tilt(this,event)" onmouseleave="untilt(this)">
+  <div class="sc" style="--sc:var(--purple);--sd:3.6s" onmousemove="tilt(this,event)" onmouseleave="untilt(this)">
     <div class="ticker t-fl" id="tk3">—</div>
-    <div class="sl">Data Points</div><div class="sv" id="sv3">—</div><div class="ss">In this dataset</div>
+    <div class="sc-label">Data Points</div>
+    <div class="sc-val" id="sv3">—</div>
+    <div class="sc-sub">In this dataset</div>
   </div>
 </div>
 
-<!-- main -->
-<div class="main-wrap">
+<!-- MAIN GRID -->
+<div class="main-grid">
 
-  <!-- sidebar -->
+  <!-- SIDEBAR -->
   <div class="sidebar">
 
+    <!-- datasets -->
     <div class="panel">
       <div class="phd">Datasets</div>
       <div class="pbd" style="padding:8px">
-        <div class="dsi on" onclick="loadDS(0,this)"><div class="ds-dot" style="background:#0071e3"></div><div><div class="dn">India Salary Benchmarks</div><div class="dm">Analyst roles · 2025 · ₹L</div></div></div>
-        <div class="dsi" onclick="loadDS(1,this)"><div class="ds-dot" style="background:#34c759"></div><div><div class="dn">SaaS Market Growth</div><div class="dm">2020–2028E · $B global</div></div></div>
-        <div class="dsi" onclick="loadDS(2,this)"><div class="ds-dot" style="background:#ff9500"></div><div><div class="dn">India Startup Funding</div><div class="dm">By sector · 2024 · $B</div></div></div>
-        <div class="dsi" onclick="loadDS(3,this)"><div class="ds-dot" style="background:#af52de"></div><div><div class="dn">Tech Giants Revenue</div><div class="dm">Apple, Amazon · $B</div></div></div>
-        <div class="dsi" onclick="loadDS(4,this)"><div class="ds-dot" style="background:#ff3b30"></div><div><div class="dn">India Employment</div><div class="dm">By sector · 2024 · M</div></div></div>
+        <div class="dsi on" onclick="loadDS(0,this)"><div class="ds-dot" style="background:#0071e3"></div><div><div class="ds-name">India Salary Benchmarks</div><div class="ds-meta">Analyst roles · 2025 · ₹L</div></div></div>
+        <div class="dsi"    onclick="loadDS(1,this)"><div class="ds-dot" style="background:#28a745"></div><div><div class="ds-name">SaaS Market Growth</div><div class="ds-meta">2020–2028E · $B global</div></div></div>
+        <div class="dsi"    onclick="loadDS(2,this)"><div class="ds-dot" style="background:#e68a00"></div><div><div class="ds-name">India Startup Funding</div><div class="ds-meta">By sector · 2024 · $B</div></div></div>
+        <div class="dsi"    onclick="loadDS(3,this)"><div class="ds-dot" style="background:#7b4fba"></div><div><div class="ds-name">Tech Giants Revenue</div><div class="ds-meta">Apple, Amazon · $B</div></div></div>
+        <div class="dsi"    onclick="loadDS(4,this)"><div class="ds-dot" style="background:#d93025"></div><div><div class="ds-name">India Employment</div><div class="ds-meta">By sector · 2024 · M</div></div></div>
       </div>
     </div>
 
+    <!-- chart types -->
     <div class="panel">
       <div class="phd">Chart Type</div>
       <div class="pbd">
-        <div class="type-grid">
+        <div class="tgrid">
           <button class="tb on" onclick="setType('bar',this)"><div class="ti">📊</div><div class="tl">Bar</div></button>
-          <button class="tb" onclick="setType('line',this)"><div class="ti">📈</div><div class="tl">Line</div></button>
-          <button class="tb" onclick="setType('doughnut',this)"><div class="ti">🍩</div><div class="tl">Donut</div></button>
-          <button class="tb" onclick="setType('radar',this)"><div class="ti">🕸️</div><div class="tl">Radar</div></button>
-          <button class="tb" onclick="setType('bubble',this)"><div class="ti">🫧</div><div class="tl">Bubble</div></button>
-          <button class="tb" onclick="setType('polarArea',this)"><div class="ti">🎯</div><div class="tl">Polar</div></button>
+          <button class="tb"    onclick="setType('line',this)"><div class="ti">📈</div><div class="tl">Line</div></button>
+          <button class="tb"    onclick="setType('doughnut',this)"><div class="ti">🍩</div><div class="tl">Donut</div></button>
+          <button class="tb"    onclick="setType('radar',this)"><div class="ti">🕸️</div><div class="tl">Radar</div></button>
+          <button class="tb"    onclick="setType('bubble',this)"><div class="ti">🫧</div><div class="tl">Bubble</div></button>
+          <button class="tb"    onclick="setType('polarArea',this)"><div class="ti">🎯</div><div class="tl">Polar</div></button>
         </div>
       </div>
     </div>
 
+    <!-- colours -->
     <div class="panel">
       <div class="phd">Colour Theme</div>
       <div class="pbd">
         <div class="sw-row">
-          <div class="sw on" data-s="0" onclick="setScheme(0,this)" style="background:conic-gradient(#0071e3,#34aadc)" title="Blue"></div>
-          <div class="sw" data-s="1" onclick="setScheme(1,this)" style="background:conic-gradient(#34c759,#30d158)" title="Green"></div>
-          <div class="sw" data-s="2" onclick="setScheme(2,this)" style="background:conic-gradient(#ff9500,#ff6000)" title="Sunset"></div>
-          <div class="sw" data-s="3" onclick="setScheme(3,this)" style="background:conic-gradient(#af52de,#bf5af2)" title="Violet"></div>
-          <div class="sw" data-s="4" onclick="setScheme(4,this)" style="background:conic-gradient(#ff3b30,#ff6b6b)" title="Coral"></div>
-          <div class="sw" data-s="5" onclick="setScheme(5,this)" style="background:conic-gradient(#1c1c1e,#636366)" title="Graphite"></div>
+          <div class="sw on" onclick="setScheme(0,this)" style="background:conic-gradient(#0071e3,#34aadc)"></div>
+          <div class="sw"    onclick="setScheme(1,this)" style="background:conic-gradient(#28a745,#30d158)"></div>
+          <div class="sw"    onclick="setScheme(2,this)" style="background:conic-gradient(#e68a00,#ff6000)"></div>
+          <div class="sw"    onclick="setScheme(3,this)" style="background:conic-gradient(#7b4fba,#bf5af2)"></div>
+          <div class="sw"    onclick="setScheme(4,this)" style="background:conic-gradient(#d93025,#ff6b6b)"></div>
+          <div class="sw"    onclick="setScheme(5,this)" style="background:conic-gradient(#1c1c1e,#636366)"></div>
         </div>
       </div>
     </div>
 
-    <!-- UPLOAD — clear, simple, supports Excel/CSV/paste -->
+    <!-- upload + paste -->
     <div class="panel">
       <div class="phd">Upload Your Data</div>
       <div class="pbd">
-        <div style="font:400 11px/1.6 var(--sans);color:var(--ink3);margin-bottom:10px">Drop an Excel or CSV file — the chart builds itself automatically. Or paste data below.</div>
+        <p style="font:400 12px/1.6 var(--sans);color:var(--ink3);margin-bottom:10px">
+          Upload an Excel or CSV file — the chart builds automatically. Works with files of any size.
+        </p>
 
         <div class="upload-zone" id="dropZone">
-          <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFile(this.files[0])" id="fileInput">
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv"
+                 onchange="handleFile(this.files[0])">
           <div class="uz-icon">📂</div>
           <div class="uz-title">Click to upload or drag &amp; drop</div>
-          <div class="uz-sub">Works with Excel and CSV files</div>
-          <div class="uz-formats">
-            <span class="uz-tag ut-xlsx">.xlsx</span>
-            <span class="uz-tag ut-csv">.csv</span>
+          <div class="uz-sub">Supports Excel and CSV files of any size</div>
+          <div class="uz-fmts">
+            <span class="uf uf-x">.xlsx / .xls</span>
+            <span class="uf uf-c">.csv</span>
           </div>
         </div>
 
-        <div style="font:500 11px/1 var(--sans);color:var(--ink4);text-align:center;margin:10px 0;display:flex;align-items:center;gap:8px">
-          <div style="flex:1;height:1px;background:var(--rule)"></div>or paste manually<div style="flex:1;height:1px;background:var(--rule)"></div>
+        <div class="upload-progress" id="uploadProgress">
+          <div class="upload-progress-bar" id="uploadBar"></div>
         </div>
+        <div class="upload-status" id="uploadStatus"></div>
 
-        <div style="font:400 10px/1.5 var(--sans);color:var(--ink4);margin-bottom:5px">
-          One row per line: <code style="font:400 10px/1 var(--mono);background:var(--page);padding:1px 5px;border-radius:4px">Label, Number</code>
+        <div class="paste-section">
+          <div class="paste-label">or paste manually</div>
+          <p class="paste-hint">
+            One item per line: <code>Label, Number</code><br>
+            Example: <code>Q1 Revenue, 120</code>
+          </p>
+          <textarea class="paste-ta" id="pasteBox"
+            placeholder="Q1 Revenue, 120&#10;Q2 Revenue, 185&#10;Q3 Revenue, 160&#10;Q4 Revenue, 210"></textarea>
+          <button class="go-btn" onclick="parsePaste()">Visualise Pasted Data →</button>
         </div>
-        <textarea class="paste-ta" id="pasteBox" placeholder="Revenue Q1, 120&#10;Revenue Q2, 185&#10;Revenue Q3, 160&#10;Revenue Q4, 210"></textarea>
-        <button class="go-btn" onclick="parsePaste()">Visualise Pasted Data →</button>
       </div>
     </div>
 
   </div>
 
-  <!-- chart panel -->
+  <!-- CHART PANEL -->
   <div class="chart-panel">
 
     <!-- macOS chrome -->
     <div class="mac">
-      <div class="mac-dots"><div class="md cl"></div><div class="md mn"></div><div class="md mx"></div></div>
-      <div class="mac-title"><strong id="macT">India Salary Benchmarks 2025</strong><span style="font-size:10px;opacity:.4;margin-left:6px">— DataLens</span></div>
+      <div class="mac-dots">
+        <div class="md cl"></div>
+        <div class="md mn"></div>
+        <div class="md mx"></div>
+      </div>
+      <div class="mac-title"><strong id="macTitle">India Salary Benchmarks 2025</strong><span style="font-size:10px;opacity:.38;margin-left:6px">— DataLens Studio</span></div>
       <div class="mac-btns">
-        <button class="mb" onclick="animChart()">▶ Replay</button>
-        <button class="mb go" onclick="exportPNG()">Export</button>
+        <button class="mb"     onclick="animChart()">▶ Replay</button>
+        <button class="mb go"  onclick="doExportPNG()">Export</button>
       </div>
       <div class="mac-bar"></div>
     </div>
 
-    <!-- ══ VIEW: CHARTS (default) ══ -->
+    <!-- CHARTS VIEW -->
     <div class="view-panel on" id="vChart">
       <div class="canvas-wrap">
         <div class="br"></div><div class="br"></div><div class="br"></div><div class="br"></div>
-        <canvas id="myChart" style="position:relative;z-index:1;width:100%;max-height:290px"></canvas>
+        <canvas id="myChart" style="position:relative;z-index:1;width:100%;max-height:280px"></canvas>
       </div>
       <div class="ins-strip" id="insStrip"></div>
     </div>
 
-    <!-- ══ VIEW: TABLE ══ -->
+    <!-- TABLE VIEW -->
     <div class="view-panel" id="vTable">
       <div class="tbl-view">
         <div class="tbl-top">
@@ -411,19 +715,16 @@ tbody tr:hover td{background:rgba(0,113,227,.025)}
       </div>
     </div>
 
-    <!-- ══ VIEW: INSIGHTS ══ -->
+    <!-- INSIGHTS VIEW -->
     <div class="view-panel" id="vInsights">
       <div class="ins-view">
-        <!-- hero stat -->
         <div class="ins-hero">
-          <div class="ins-hero-label">Top performer</div>
+          <div class="ins-hero-lbl">Top performer</div>
           <div class="ins-hero-val" id="insHeroVal">—</div>
           <div class="ins-hero-sub" id="insHeroSub">—</div>
         </div>
-        <!-- 4 key stats -->
-        <div class="ins-grid" id="insGrid"></div>
-        <!-- findings -->
-        <div style="font:600 12px/1 var(--sans);color:var(--ink2);margin-bottom:8px;letter-spacing:.01em">Key Analyst Findings</div>
+        <div class="ins-kpis" id="insKpis"></div>
+        <div class="ins-section-title">Key Analyst Findings</div>
         <div class="ins-findings" id="insFindings"></div>
       </div>
     </div>
@@ -434,109 +735,146 @@ tbody tr:hover td{background:rgba(0,113,227,.025)}
 <div class="toast" id="toast"></div>
 
 <script>
-/* ══ DATA ══════════════════════════════════════════════════════ */
+/* ════════════════════════════════════
+   DATASETS
+════════════════════════════════════ */
 const DS=[
-  {title:'India Salary Benchmarks 2025',sub:'ANALYST ROLES · ANNUAL PACKAGE IN LAKHS',unit:'₹L',color:'#0071e3',
+  {title:'India Salary Benchmarks 2025',sub:'ANALYST ROLES · ANNUAL PACKAGE IN LAKHS',unit:'₹L',
    labels:['Jr. BA','Business Analyst','Sr. BA','Lead Analyst','Data Analyst','Sr. Data Analyst','Research Analyst','Strategy Analyst'],
    values:[4.8,7.5,11.2,16.4,8.2,13.6,6.9,14.8],
-   insights:[{t:'<strong>Strategy Analyst</strong> commands ₹14.8L — highest in this category',c:'#0071e3'},{t:'Average across all analyst roles: <strong>₹10.4L per annum</strong>',c:'#34c759'},{t:'Sr. BA → Lead jump is <strong>46%</strong> — the most critical career move',c:'#ff9500'},{t:'Jr. to Sr. BA: a <strong>2.3× salary multiplier</strong> in 3–5 years',c:'#af52de'}]},
-  {title:'Global SaaS Market Growth 2020–2028E',sub:'MARKET SIZE · BILLION USD · 14.6% CAGR',unit:'$B',color:'#34c759',
+   insights:[
+     {t:'<strong>Strategy Analyst</strong> leads at ₹14.8L — highest in this category',c:'#0071e3'},
+     {t:'Average across all roles: <strong>₹10.4L per annum</strong>',c:'#28a745'},
+     {t:'Sr. BA → Lead Analyst jump is <strong>46%</strong> — the most critical career step',c:'#e68a00'},
+     {t:'Jr. to Sr. BA: a <strong>2.3× salary multiplier</strong> in 3–5 years',c:'#7b4fba'},
+   ]},
+  {title:'Global SaaS Market Growth 2020–2028E',sub:'MARKET SIZE · BILLION USD · 14.6% CAGR',unit:'$B',
    labels:['2020','2021','2022','2023','2024E','2025E','2026E','2027E','2028E'],
    values:[102,121,138,158,181,207,237,275,317],
-   insights:[{t:'Market <strong>triples from $102B to $317B</strong> over 8 years',c:'#34c759'},{t:'Security SaaS fastest sub-vertical at <strong>22% CAGR</strong>',c:'#0071e3'},{t:'AI-embedded SaaS commands <strong>15–18% price premium</strong> over legacy',c:'#ff9500'},{t:'India sub-market at <strong>28% CAGR</strong> — underweighted in global strategy',c:'#af52de'}]},
-  {title:'India Startup Funding by Sector 2024',sub:'TOTAL FUNDING · BILLION USD · TOP 8 SECTORS',unit:'$B',color:'#ff9500',
+   insights:[
+     {t:'Market <strong>triples from $102B to $317B</strong> over just 8 years',c:'#28a745'},
+     {t:'Security SaaS fastest sub-vertical at <strong>22% CAGR</strong>',c:'#0071e3'},
+     {t:'AI-embedded SaaS commands a <strong>15–18% price premium</strong> over legacy products',c:'#e68a00'},
+     {t:'India sub-market growing at <strong>28% CAGR</strong> — underweighted globally',c:'#7b4fba'},
+   ]},
+  {title:'India Startup Funding by Sector 2024',sub:'TOTAL FUNDING · BILLION USD · TOP 8 SECTORS',unit:'$B',
    labels:['Fintech','D2C/E-comm','EV/CleanTech','Healthtech','SaaS/B2B','EdTech','AgriTech','LogiTech'],
    values:[3.8,2.9,2.4,2.1,1.8,1.2,0.7,1.1],
-   insights:[{t:'<strong>Fintech leads</strong> at $3.8B — 23% of all India startup funding',c:'#ff9500'},{t:'EV/CleanTech fastest growing at <strong>+67% YoY</strong> vs 2023',c:'#34c759'},{t:'D2C close second at $2.9B driven by <strong>Tier-2 city expansion</strong>',c:'#0071e3'},{t:'AgriTech at $0.7B — a <strong>massive white-space</strong> for investors',c:'#ff3b30'}]},
-  {title:'Global Tech Giants Revenue FY2024',sub:'ANNUAL REVENUE · BILLION USD · FY2024',unit:'$B',color:'#af52de',
+   insights:[
+     {t:'<strong>Fintech leads</strong> at $3.8B — 23% of total India startup funding',c:'#e68a00'},
+     {t:'EV/CleanTech fastest growing at <strong>+67% YoY</strong> versus 2023',c:'#28a745'},
+     {t:'D2C at $2.9B driven by <strong>Tier-2 city expansion</strong> and quick commerce',c:'#0071e3'},
+     {t:'AgriTech at $0.7B represents a <strong>massive white-space</strong> opportunity',c:'#d93025'},
+   ]},
+  {title:'Global Tech Giants Revenue FY2024',sub:'ANNUAL REVENUE · BILLION USD · FISCAL YEAR 2024',unit:'$B',
    labels:['Apple','Microsoft','Alphabet','Amazon','Meta','Nvidia','Samsung','Oracle'],
    values:[383,245,307,574,134,61,224,53],
-   insights:[{t:'<strong>Amazon leads at $574B</strong> — AWS cloud + retail combined',c:'#af52de'},{t:'Nvidia grew <strong>122% YoY</strong> — fastest in this cohort by far',c:'#34c759'},{t:'Apple + Microsoft + Alphabet: <strong>$935B combined</strong>',c:'#0071e3'},{t:'Oracle smallest but <strong>highest operating margin</strong> at 42%',c:'#ff9500'}]},
-  {title:'India Employment by Sector 2024',sub:'WORKFORCE IN MILLIONS · ORGANISED + UNORGANISED',unit:'M',color:'#ff3b30',
+   insights:[
+     {t:'<strong>Amazon leads at $574B</strong> — AWS cloud + retail revenue combined',c:'#7b4fba'},
+     {t:'Nvidia <strong>grew 122% YoY</strong> — fastest growth rate in this cohort by far',c:'#28a745'},
+     {t:'Apple + Microsoft + Alphabet: <strong>$935B combined</strong> — exceeds Amazon alone',c:'#0071e3'},
+     {t:'Oracle smallest in revenue but <strong>highest cloud operating margin</strong> at 42%',c:'#e68a00'},
+   ]},
+  {title:'India Employment by Sector 2024',sub:'WORKFORCE IN MILLIONS · ORGANISED + UNORGANISED',unit:'M',
    labels:['Agriculture','Construction','Manufacturing','Trade/Retail','IT/Services','Education','Healthcare','Finance'],
    values:[242,71,64,58,22,18,14,12],
-   insights:[{t:'Agriculture employs <strong>48% of workforce</strong> but only 15% GDP',c:'#ff3b30'},{t:'IT/Services: <strong>8% GDP from 4.4% workforce</strong> — highest productivity',c:'#0071e3'},{t:'Construction added <strong>+18M jobs since 2021</strong>',c:'#34c759'},{t:'Finance: smallest headcount, <strong>highest revenue per employee</strong>',c:'#af52de'}]},
+   insights:[
+     {t:'Agriculture employs <strong>48% of India\'s workforce</strong> yet only 15% of GDP',c:'#d93025'},
+     {t:'IT/Services: <strong>8% of GDP from just 4.4% of workforce</strong> — highest productivity',c:'#0071e3'},
+     {t:'Construction added <strong>+18M workers since 2021</strong> — infrastructure push',c:'#28a745'},
+     {t:'Finance is smallest in headcount but has <strong>highest revenue per employee</strong>',c:'#7b4fba'},
+   ]},
 ];
 
 const SCHEMES=[
   ['#0071e3','#34aadc','#5ac8fa','#007aff','#0055ff','#409cff','#30b0c7','#64d2ff'],
-  ['#34c759','#30d158','#32ade6','#1c7c54','#2daa44','#51cf66','#63e6be','#2db24a'],
-  ['#ff9500','#ff6000','#ffcc00','#ff3b30','#ff8c00','#ffa500','#ffd60a','#ff453a'],
-  ['#af52de','#bf5af2','#9556cc','#cf4ddb','#7d40b0','#da71ee','#c264fe','#9f8bf4'],
-  ['#ff3b30','#ff6b6b','#ff2d55','#f4511e','#e03131','#c92a2a','#fa5252','#ff8787'],
+  ['#28a745','#30d158','#32ade6','#1c7c54','#2daa44','#51cf66','#63e6be','#2db24a'],
+  ['#e68a00','#ff6000','#ffcc00','#ff3b30','#ff8c00','#ffa500','#ffd60a','#ff453a'],
+  ['#7b4fba','#bf5af2','#9556cc','#cf4ddb','#7d40b0','#da71ee','#c264fe','#9f8bf4'],
+  ['#d93025','#ff6b6b','#ff2d55','#f4511e','#e03131','#c92a2a','#fa5252','#ff8787'],
   ['#1c1c1e','#3a3a3c','#636366','#48484a','#545456','#6c6c70','#8e8e93','#aeaeb2'],
 ];
 
-let cDS=0,cType='bar',cScheme=0,myChart=null,curData=null,tickIvs=[];
+/* ════════════════════════════════════
+   STATE
+════════════════════════════════════ */
+let cType='bar', cScheme=0, myChart=null, curData=null, tickIvs=[];
 
+/* ════════════════════════════════════
+   CHART.JS CONFIG
+════════════════════════════════════ */
 Chart.defaults.color='#636366';
 Chart.defaults.borderColor='#e5e5ea';
 Chart.defaults.font.family="'Inter',sans-serif";
-Chart.defaults.font.size=11;
+Chart.defaults.font.size=12;
 
-/* ══ CHART OPTIONS ══ */
-function cOpts(type,unit){
-  const o={
-    responsive:true,maintainAspectRatio:true,
-    animation:{duration:900,easing:'easeOutQuart'},
-    plugins:{
-      legend:{display:['doughnut','radar','polarArea','bubble'].includes(type),position:'right',
-        labels:{color:'#3a3a3c',font:{family:"'Inter',sans-serif",size:11},padding:12,boxWidth:10,boxHeight:10}},
-      tooltip:{backgroundColor:'#1c1c1e',borderColor:'rgba(255,255,255,.08)',borderWidth:1,
-        titleColor:'#fff',bodyColor:'rgba(255,255,255,.7)',
-        titleFont:{family:"'Inter',sans-serif",size:13,weight:'600'},
-        bodyFont:{family:"'DM Mono',monospace",size:11},padding:13,cornerRadius:10,
-        callbacks:{label:c=>` ${c.parsed.y!==undefined?c.parsed.y:c.parsed} ${unit}`}}
-    }
+function chartOpts(type,unit){
+  const tt={
+    backgroundColor:'#1c1c1e',borderColor:'rgba(255,255,255,.08)',borderWidth:1,
+    titleColor:'#ffffff',bodyColor:'rgba(255,255,255,.75)',
+    titleFont:{family:"'Inter',sans-serif",size:13,weight:'600'},
+    bodyFont:{family:"'DM Mono',monospace",size:12},
+    padding:14,cornerRadius:10,
+    callbacks:{label:c=>` ${c.parsed.y!==undefined?c.parsed.y:c.parsed} ${unit}`}
   };
-  if(type==='bar'){o.aspectRatio=2.1;o.scales={x:{grid:{color:'#f2f2f7'},ticks:{color:'#636366'},border:{color:'#e5e5ea'}},y:{grid:{color:'#f2f2f7'},ticks:{color:'#636366',callback:v=>v+' '+unit},border:{color:'#e5e5ea'}}};}
-  else if(type==='line'){o.aspectRatio=2.1;o.scales={x:{grid:{color:'#f2f2f7'},ticks:{color:'#636366'},border:{color:'#e5e5ea'}},y:{grid:{color:'#f2f2f7'},ticks:{color:'#636366',callback:v=>v+' '+unit},border:{color:'#e5e5ea'}}};}
-  else if(type==='doughnut'){o.aspectRatio=1.8;o.cutout='62%';o.plugins.tooltip.callbacks={label:c=>` ${c.label}: ${c.parsed} ${unit}`};}
-  else if(type==='radar'){o.aspectRatio=1.6;o.scales={r:{grid:{color:'#e5e5ea'},pointLabels:{color:'#3a3a3c',font:{size:10}},ticks:{display:false},angleLines:{color:'#e5e5ea'}}};}
-  else if(type==='polarArea'){o.aspectRatio=1.6;o.scales={r:{grid:{color:'#e5e5ea'},ticks:{display:false}}};}
+  const scX={grid:{color:'#f0f0f5'},ticks:{color:'#636366',font:{size:12}},border:{color:'#e5e5ea'}};
+  const scY={grid:{color:'#f0f0f5'},ticks:{color:'#636366',font:{size:12},callback:v=>v+' '+unit},border:{color:'#e5e5ea'}};
+  const o={responsive:true,maintainAspectRatio:true,
+    animation:{duration:900,easing:'easeOutQuart'},
+    plugins:{legend:{display:['doughnut','radar','polarArea','bubble'].includes(type),position:'right',
+      labels:{color:'#3a3a3c',font:{family:"'Inter',sans-serif",size:12},padding:12,boxWidth:10,boxHeight:10}},tooltip:tt}};
+  if(type==='bar'){o.aspectRatio=2.0;o.scales={x:scX,y:scY};}
+  else if(type==='line'){o.aspectRatio=2.0;o.scales={x:scX,y:scY};}
+  else if(type==='doughnut'){o.aspectRatio=1.7;o.cutout='62%';tt.callbacks={label:c=>` ${c.label}: ${c.parsed} ${unit}`};}
+  else if(type==='radar'){o.aspectRatio=1.5;o.scales={r:{grid:{color:'#e5e5ea'},pointLabels:{color:'#3a3a3c',font:{size:12}},ticks:{display:false},angleLines:{color:'#e5e5ea'}}};}
+  else if(type==='polarArea'){o.aspectRatio=1.5;o.scales={r:{grid:{color:'#e5e5ea'},ticks:{display:false}}};}
   else if(type==='bubble'){
     o.aspectRatio=2.0;
-    o.scales={x:{grid:{color:'#f2f2f7'},ticks:{color:'#636366'},border:{color:'#e5e5ea'},title:{display:true,text:'Index',color:'#8e8e93',font:{size:10}}},
-              y:{grid:{color:'#f2f2f7'},ticks:{color:'#636366',callback:v=>v+' '+unit},border:{color:'#e5e5ea'}}};
-    o.plugins.tooltip.callbacks={label:c=>` ${c.label}: ${c.parsed.y} ${unit}`};
+    o.scales={x:{...scX,title:{display:true,text:'Index',color:'#8e8e93',font:{size:11}}},y:scY};
+    tt.callbacks={label:c=>` ${c.dataset.label}: ${c.parsed.y} ${unit}`};
   }
   return o;
 }
 
-function buildData(type,labels,values,scheme){
+function mkData(type,labels,values,scheme){
   const c=SCHEMES[scheme];
   if(type==='bar') return{labels,datasets:[{label:'Value',data:values,backgroundColor:c.map(x=>x+'cc'),borderColor:c,borderWidth:1.5,borderRadius:6,borderSkipped:false}]};
   if(type==='line') return{labels,datasets:[{label:'Value',data:values,borderColor:c[0],backgroundColor:c[0]+'18',borderWidth:2.5,pointBackgroundColor:c[0],pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:5,fill:true,tension:.38}]};
   if(type==='doughnut') return{labels,datasets:[{data:values,backgroundColor:c.map(x=>x+'dd'),borderColor:'#fff',borderWidth:3,hoverOffset:10}]};
   if(type==='radar') return{labels,datasets:[{label:'Value',data:values,backgroundColor:c[0]+'22',borderColor:c[0],borderWidth:2,pointBackgroundColor:c[0],pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:4}]};
-  if(type==='polarArea') return{labels,datasets:[{data:values,backgroundColor:c.map(x=>x+'bb'),borderColor:c.map(x=>x),borderWidth:1.5}]};
+  if(type==='polarArea') return{labels,datasets:[{data:values,backgroundColor:c.map(x=>x+'bb'),borderColor:c,borderWidth:1.5}]};
   if(type==='bubble'){
     const mx=Math.max(...values);
-    return{datasets:labels.map((l,i)=>({label:l,data:[{x:i,y:values[i],r:Math.max(6,Math.round(values[i]/mx*30))}],backgroundColor:c[i%c.length]+'bb',borderColor:c[i%c.length],borderWidth:1.5}))};
+    return{datasets:labels.map((l,i)=>({label:l,data:[{x:i,y:values[i],r:Math.max(6,Math.round(values[i]/mx*28))}],backgroundColor:c[i%c.length]+'bb',borderColor:c[i%c.length],borderWidth:1.5}))};
   }
 }
 
-/* ══ RENDER ══ */
+/* ════════════════════════════════════
+   RENDER
+════════════════════════════════════ */
 function render(ds){
   const ctx=document.getElementById('myChart').getContext('2d');
   if(myChart){myChart.destroy();myChart=null;}
-  myChart=new Chart(ctx,{type:cType,data:buildData(cType,ds.labels,ds.values,cScheme),options:cOpts(cType,ds.unit)});
+  myChart=new Chart(ctx,{type:cType,data:mkData(cType,ds.labels,ds.values,cScheme),options:chartOpts(cType,ds.unit)});
   updateStats(ds);
   updateInsStrip(ds);
   updateTable(ds);
-  updateInsView(ds);
+  updateInsightsView(ds);
   updateHeaders(ds);
   startTickers(ds);
 }
 
 function updateHeaders(ds){
-  ['heroTitle','macT'].forEach(id=>document.getElementById(id).textContent=ds.title);
+  document.getElementById('heroTitle').textContent=ds.title;
   document.getElementById('heroSub').textContent=ds.sub;
+  document.getElementById('macTitle').textContent=ds.title;
 }
 
-/* ══ STATS ══ */
+/* ════════════════════════════════════
+   STATS + TICKERS
+════════════════════════════════════ */
 function updateStats(ds){
-  const v=ds.values,mx=Math.max(...v),mn=Math.min(...v);
+  const v=ds.values, mx=Math.max(...v), mn=Math.min(...v);
   const avg=Math.round(v.reduce((a,b)=>a+b,0)/v.length*10)/10;
   document.getElementById('sv0').textContent=mx+ds.unit;
   document.getElementById('sv1').textContent=avg+ds.unit;
@@ -546,25 +884,23 @@ function updateStats(ds){
   document.getElementById('ss2').textContent=ds.labels[v.indexOf(mn)];
 }
 
-/* ══ TICKERS ══ */
 function startTickers(ds){
-  tickIvs.forEach(clearInterval);tickIvs=[];
+  tickIvs.forEach(clearInterval); tickIvs=[];
   const bases=[
     {id:'sv0',tid:'tk0',base:Math.max(...ds.values),unit:ds.unit},
     {id:'sv1',tid:'tk1',base:Math.round(ds.values.reduce((a,b)=>a+b)/ds.values.length*10)/10,unit:ds.unit},
     {id:'sv2',tid:'tk2',base:Math.min(...ds.values),unit:ds.unit},
-    {id:'sv3',tid:'tk3',base:ds.values.length,unit:'',noPct:true},
+    {id:'sv3',tid:'tk3',base:ds.values.length,unit:'',skip:true},
   ];
-  bases.forEach(({id,tid,base,unit,noPct},i)=>{
+  bases.forEach(({id,tid,base,unit,skip},i)=>{
     let dir=1;
     const iv=setInterval(()=>{
-      if(noPct)return;
-      const noise=(Math.random()-.5)*.04;
-      const raw=base*(1+noise*dir);
-      const disp=Number.isInteger(base)?Math.round(raw):Math.round(raw*10)/10;
-      const diff=disp-base;
-      const el=document.getElementById(id),tk=document.getElementById(tid);
-      if(el) el.textContent=disp+unit;
+      if(skip) return;
+      const n=base*(1+(Math.random()-.5)*.04*dir);
+      const d=Number.isInteger(base)?Math.round(n):Math.round(n*10)/10;
+      const diff=d-base;
+      const el=document.getElementById(id), tk=document.getElementById(tid);
+      if(el) el.textContent=d+unit;
       if(tk){
         if(Math.abs(diff)<.001){tk.className='ticker t-fl';tk.textContent='—';}
         else if(diff>0){tk.className='ticker t-up';tk.textContent='▲ +'+Math.abs(Math.round(diff*100)/100)+unit;}
@@ -576,104 +912,111 @@ function startTickers(ds){
   });
 }
 
-/* ══ INSIGHT STRIP (under chart) ══ */
+/* ════════════════════════════════════
+   INSIGHT STRIP
+════════════════════════════════════ */
 function updateInsStrip(ds){
   document.getElementById('insStrip').innerHTML=ds.insights.map(i=>
     `<div class="is-cell"><div class="is-pip" style="background:${i.c}"></div><div class="is-txt">${i.t}</div></div>`
   ).join('');
 }
 
-/* ══ TABLE VIEW ══ */
+/* ════════════════════════════════════
+   TABLE VIEW
+════════════════════════════════════ */
 function updateTable(ds){
   const mx=Math.max(...ds.values);
   document.getElementById('tblCt').textContent=ds.values.length+' rows';
   document.getElementById('tHead').innerHTML='<th>#</th><th>Label</th><th>Value</th><th>% of Max</th><th>Bar</th>';
-  const ranked=[...ds.values].map((v,i)=>({v,i})).sort((a,b)=>b.v-a.v);
-  const rankOf=v=>ranked.findIndex(x=>x.v===v)+1;
+  const sorted=[...ds.values].map((v,i)=>({v,i})).sort((a,b)=>b.v-a.v);
+  const rankOf=v=>sorted.findIndex(x=>x.v===v)+1;
   document.getElementById('tBody').innerHTML=ds.labels.map((l,i)=>{
     const pct=Math.round(ds.values[i]/mx*100);
     const r=rankOf(ds.values[i]);
     return`<tr>
       <td style="color:${r===1?'var(--accent)':'var(--ink4)'};font-weight:${r===1?'600':'400'}">${r}</td>
       <td class="${r===1?'r1n':''}">${l}</td>
-      <td class="td-n">${ds.values[i]} ${ds.unit}</td>
-      <td style="color:var(--ink4)">${pct}%</td>
+      <td class="td-num">${ds.values[i]} ${ds.unit}</td>
+      <td style="color:var(--ink3)">${pct}%</td>
       <td><div class="td-bt"><div class="td-bf" style="width:${pct}%"></div></div></td>
     </tr>`;
   }).join('');
 }
 
-/* ══ INSIGHTS VIEW ══ */
-function updateInsView(ds){
-  const v=ds.values,mx=Math.max(...v),mn=Math.min(...v),lx=ds.labels[v.indexOf(mx)];
+/* ════════════════════════════════════
+   INSIGHTS VIEW
+════════════════════════════════════ */
+function updateInsightsView(ds){
+  const v=ds.values, mx=Math.max(...v), mn=Math.min(...v);
   const avg=Math.round(v.reduce((a,b)=>a+b)/v.length*10)/10;
   const total=Math.round(v.reduce((a,b)=>a+b,0)*10)/10;
-  const range=Math.round((mx-mn)*10)/10;
-
   document.getElementById('insHeroVal').textContent=mx+' '+ds.unit;
-  document.getElementById('insHeroSub').textContent=lx+' — top performer in this dataset';
-
-  document.getElementById('insGrid').innerHTML=`
-    <div class="ins-card"><div class="ins-card-label">Average</div><div class="ins-card-val">${avg} ${ds.unit}</div><div class="ins-card-desc">Mean across all ${v.length} data points</div></div>
-    <div class="ins-card"><div class="ins-card-label">Total</div><div class="ins-card-val">${total} ${ds.unit}</div><div class="ins-card-desc">Sum of all values in dataset</div></div>
-    <div class="ins-card"><div class="ins-card-label">Range</div><div class="ins-card-val">${range} ${ds.unit}</div><div class="ins-card-desc">Spread from lowest to highest</div></div>
-    <div class="ins-card"><div class="ins-card-label">Data points</div><div class="ins-card-val">${v.length}</div><div class="ins-card-desc">Total items in this dataset</div></div>
+  document.getElementById('insHeroSub').textContent=ds.labels[v.indexOf(mx)]+' — top performer in this dataset';
+  document.getElementById('insKpis').innerHTML=`
+    <div class="ins-kpi"><div class="ins-kpi-l">Average</div><div class="ins-kpi-v">${avg} ${ds.unit}</div><div class="ins-kpi-d">Mean across all ${v.length} data points</div></div>
+    <div class="ins-kpi"><div class="ins-kpi-l">Total</div><div class="ins-kpi-v">${total} ${ds.unit}</div><div class="ins-kpi-d">Sum of all values in dataset</div></div>
+    <div class="ins-kpi"><div class="ins-kpi-l">Range</div><div class="ins-kpi-v">${Math.round((mx-mn)*10)/10} ${ds.unit}</div><div class="ins-kpi-d">Spread from lowest to highest</div></div>
+    <div class="ins-kpi"><div class="ins-kpi-l">Data points</div><div class="ins-kpi-v">${v.length}</div><div class="ins-kpi-d">Items in this dataset</div></div>
   `;
-
   document.getElementById('insFindings').innerHTML=ds.insights.map((ins,i)=>`
     <div class="ins-finding">
       <div class="ins-pip" style="background:${ins.c}"></div>
-      <div class="ins-finding-text">${ins.t}</div>
-      <div class="ins-rank-badge" style="background:${ins.c}18;color:${ins.c}">F${i+1}</div>
+      <div class="ins-finding-txt">${ins.t}</div>
+      <div class="ins-badge" style="background:${ins.c}18;color:${ins.c}">F${i+1}</div>
     </div>
   `).join('');
 }
 
-/* ══ VIEW SWITCHER (the fix) ══ */
+/* ════════════════════════════════════
+   CONTROLS
+════════════════════════════════════ */
 function switchView(view,el){
   document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('on'));
   if(el) el.classList.add('on');
-  document.getElementById('vChart').classList.remove('on');
-  document.getElementById('vTable').classList.remove('on');
-  document.getElementById('vInsights').classList.remove('on');
-  if(view==='chart') document.getElementById('vChart').classList.add('on');
-  else if(view==='table') document.getElementById('vTable').classList.add('on');
-  else if(view==='insights') document.getElementById('vInsights').classList.add('on');
+  ['vChart','vTable','vInsights'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  const map={chart:'vChart',table:'vTable',insights:'vInsights'};
+  document.getElementById(map[view]).classList.add('on');
 }
 
-/* ══ CONTROLS ══ */
 function loadDS(idx,el){
-  cDS=idx;curData=DS[idx];
+  curData=DS[idx];
   document.querySelectorAll('.dsi').forEach(b=>b.classList.remove('on'));
   if(el) el.classList.add('on');
   render(curData);
   toast('Loaded: '+curData.title.split(' ').slice(0,3).join(' ')+'…');
 }
+
 function setType(t,el){
   cType=t;
   document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
   if(el) el.classList.add('on');
   if(curData) render(curData);
 }
+
 function setScheme(idx,el){
   cScheme=idx;
   document.querySelectorAll('.sw').forEach(b=>b.classList.remove('on'));
   if(el) el.classList.add('on');
   if(curData) render(curData);
 }
-function animChart(){if(myChart){myChart.reset();myChart.update();}}
 
-/* ══ TILT ══ */
+function animChart(){ if(myChart){myChart.reset();myChart.update();} }
+
+/* ════════════════════════════════════
+   3D TILT
+════════════════════════════════════ */
 function tilt(el,ev){
-  const r=el.getBoundingClientRect(),x=ev.clientX-r.left,y=ev.clientY-r.top;
-  const cx=r.width/2,cy=r.height/2;
-  const rx=(y-cy)/cy*10,ry=-(x-cx)/cx*10;
+  const r=el.getBoundingClientRect();
+  const rx=((ev.clientY-r.top)/r.height-.5)*14;
+  const ry=-((ev.clientX-r.left)/r.width-.5)*14;
   el.style.transform=`perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-3px) scale(1.02)`;
-  el.style.boxShadow=`0 12px 36px rgba(0,0,0,.14)`;
+  el.style.boxShadow='0 12px 36px rgba(0,0,0,.13)';
 }
-function untilt(el){el.style.transform='';el.style.boxShadow='';}
+function untilt(el){ el.style.transform=''; el.style.boxShadow=''; }
 
-/* ══ BAR BREATHING ══ */
+/* ════════════════════════════════════
+   BAR BREATHING
+════════════════════════════════════ */
 function breathe(){
   if(!myChart||cType!=='bar'||!curData) return;
   const ds=myChart.data.datasets[0];
@@ -681,160 +1024,230 @@ function breathe(){
   ds.data=curData.values.map(v=>v*(1+(Math.random()-.5)*.012));
   myChart.update('none');
 }
-setInterval(breathe,3000);
+setInterval(breathe,3200);
 
-/* ══ FILE UPLOAD (Excel + CSV) ══ */
-function handleFile(file){
-  if(!file) return;
-  const name=file.name.toLowerCase();
-  toast('Reading '+file.name+'…');
-  if(name.endsWith('.csv')){
-    const reader=new FileReader();
-    reader.onload=e=>parseCSVText(e.target.result,file.name);
-    reader.readAsText(file);
-  } else if(name.endsWith('.xlsx')||name.endsWith('.xls')){
-    const reader=new FileReader();
-    reader.onload=e=>{
-      try{
-        const wb=XLSX.read(e.target.result,{type:'array'});
-        const ws=wb.Sheets[wb.SheetNames[0]];
-        const rows=XLSX.utils.sheet_to_json(ws,{header:1});
-        processRows(rows,file.name);
-      }catch(err){toast('Could not read Excel file');}
-    };
-    reader.readAsArrayBuffer(file);
-  } else {
-    toast('Please upload .xlsx, .xls, or .csv');
-  }
+/* ════════════════════════════════════
+   FILE UPLOAD  (FIX 3 — bulletproof)
+════════════════════════════════════ */
+function setUploadState(msg,pct){
+  const prog=document.getElementById('uploadProgress');
+  const bar =document.getElementById('uploadBar');
+  const stat=document.getElementById('uploadStatus');
+  if(pct==null){prog.style.display='none';stat.style.display='none';return;}
+  prog.style.display='block'; stat.style.display='block';
+  bar.style.width=pct+'%'; stat.textContent=msg;
 }
 
-function parseCSVText(text,fname){
-  const rows=text.split('\n').filter(l=>l.trim()).map(l=>l.split(',').map(c=>c.trim().replace(/"/g,'')));
+function handleFile(file){
+  if(!file){return;}
+  const name=file.name.toLowerCase();
+  const sizeMB=(file.size/1048576).toFixed(1);
+  setUploadState('Reading '+file.name+' ('+sizeMB+' MB)…', 20);
+
+  if(name.endsWith('.csv')){
+    const reader=new FileReader();
+    reader.onprogress=e=>{ if(e.lengthComputable) setUploadState('Reading…',20+Math.round(e.loaded/e.total*60)); };
+    reader.onload=e=>{ setUploadState('Parsing…',85); setTimeout(()=>{ parseCSV(e.target.result,file.name); },10); };
+    reader.onerror=()=>{ setUploadState('Error reading file.',0); toast('Could not read file'); };
+    reader.readAsText(file);
+
+  } else if(name.endsWith('.xlsx')||name.endsWith('.xls')){
+    if(typeof XLSX==='undefined'){
+      setUploadState('XLSX library not loaded. Try CSV.',0);
+      toast('Please try a CSV file instead');
+      return;
+    }
+    const reader=new FileReader();
+    reader.onprogress=e=>{ if(e.lengthComputable) setUploadState('Reading…',20+Math.round(e.loaded/e.total*60)); };
+    reader.onload=e=>{
+      setUploadState('Parsing Excel…',85);
+      setTimeout(()=>{
+        try{
+          const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+          const ws=wb.Sheets[wb.SheetNames[0]];
+          const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+          processRows(rows,file.name);
+        }catch(err){
+          setUploadState('Could not parse Excel file: '+err.message,0);
+          toast('Could not parse Excel. Try saving as CSV');
+        }
+      },10);
+    };
+    reader.onerror=()=>{ setUploadState('Error reading file.',0); toast('Could not read file'); };
+    reader.readAsArrayBuffer(file);
+
+  } else {
+    setUploadState('',null);
+    toast('Please upload .xlsx, .xls, or .csv');
+  }
+
+  /* reset file input so same file can be re-uploaded */
+  document.getElementById('fileInput').value='';
+}
+
+function parseCSV(text,fname){
+  const rows=text.split(/\r?\n/).filter(l=>l.trim()).map(l=>{
+    /* handle quoted commas */
+    const out=[];let cur='',inQ=false;
+    for(const ch of l){if(ch==='"'){inQ=!inQ;}else if(ch===','&&!inQ){out.push(cur.trim());cur='';}else{cur+=ch;}}
+    out.push(cur.trim()); return out;
+  });
   processRows(rows,fname);
 }
 
 function processRows(rows,fname){
-  if(!rows||!rows.length){toast('Empty file');return;}
-  /* skip header if first row has non-numeric second column */
+  if(!rows||!rows.length){ setUploadState('File appears empty.',0); return; }
+
+  /* auto-detect header: if last cell of first row is non-numeric, skip it */
   let start=0;
-  if(rows[0] && isNaN(parseFloat(rows[0][rows[0].length-1]))) start=1;
+  const firstLastCell=String(rows[0]?rows[0][rows[0].length-1]:'').replace(/[₹$,%]/g,'').trim();
+  if(isNaN(parseFloat(firstLastCell))) start=1;
 
   const labels=[],values=[];
   rows.slice(start).forEach(row=>{
     if(!row||row.length<2) return;
-    const val=parseFloat(row[row.length-1]);
-    if(!isNaN(val)&&row[0]){labels.push(String(row[0]));values.push(val);}
+    /* clean the value: remove currency symbols, commas, percent */
+    const rawVal=String(row[row.length-1]).replace(/[₹$,% ]/g,'').trim();
+    const val=parseFloat(rawVal);
+    const lbl=String(row[0]).trim();
+    if(lbl&&!isNaN(val)) { labels.push(lbl); values.push(val); }
   });
 
-  if(!labels.length){toast('No valid data found in file');return;}
+  if(!labels.length){
+    setUploadState('No valid Label, Number rows found. Check your file.',0);
+    toast('No data found — check file format'); return;
+  }
+
+  setUploadState('Done! '+labels.length+' rows loaded.',100);
+  setTimeout(()=>setUploadState('',null),3000);
 
   const mx=Math.max(...values),mn=Math.min(...values),avg=values.reduce((a,b)=>a+b)/values.length;
   const cleanName=fname.replace(/\.\w+$/,'');
   curData={
-    title:cleanName,sub:labels.length+' DATA POINTS · FROM FILE: '+fname.toUpperCase(),unit:'',color:'#0071e3',labels,values,
+    title:cleanName,
+    sub:labels.length+' DATA POINTS · FROM FILE: '+fname.toUpperCase(),
+    unit:'',
+    labels,values,
     insights:[
       {t:`Highest: <strong>${labels[values.indexOf(mx)]}</strong> at ${mx}`,c:'#0071e3'},
-      {t:`Average value: <strong>${avg.toFixed(2)}</strong> across ${values.length} data points`,c:'#34c759'},
-      {t:`Range: <strong>${(mx-mn).toFixed(2)}</strong> from lowest to highest value`,c:'#ff9500'},
-      {t:`Lowest: <strong>${labels[values.indexOf(mn)]}</strong> at ${mn}`,c:'#af52de'},
+      {t:`Average: <strong>${avg.toFixed(2)}</strong> across ${values.length} data points`,c:'#28a745'},
+      {t:`Range: <strong>${(mx-mn).toFixed(2)}</strong> between highest and lowest`,c:'#e68a00'},
+      {t:`Lowest: <strong>${labels[values.indexOf(mn)]}</strong> at ${mn}`,c:'#7b4fba'},
     ]
   };
   document.querySelectorAll('.dsi').forEach(b=>b.classList.remove('on'));
   render(curData);
-  toast('Visualised: '+labels.length+' rows from '+fname);
+  toast('Visualised '+labels.length+' rows from '+fname);
 }
 
-/* ══ PASTE ══ */
+/* ════════════════════════════════════
+   PASTE  (FIX 3)
+════════════════════════════════════ */
 function parsePaste(){
   const raw=document.getElementById('pasteBox').value.trim();
-  if(!raw){toast('Paste some data first');return;}
+  if(!raw){ toast('Paste your data first'); return; }
   const rows=raw.split('\n').filter(l=>l.trim()).map(l=>l.split(',').map(s=>s.trim()));
   const labels=[],values=[];
   rows.forEach(r=>{
     if(r.length<2) return;
-    const v=parseFloat(r[r.length-1]);
-    if(!isNaN(v)&&r[0]){labels.push(r[0]);values.push(v);}
+    const val=parseFloat(String(r[r.length-1]).replace(/[₹$,% ]/g,''));
+    if(r[0]&&!isNaN(val)){labels.push(r[0]);values.push(val);}
   });
-  if(!labels.length){toast('Format: Label, Number — one per line');return;}
+  if(!labels.length){ toast('Format: Label, Number — one per line'); return; }
   const mx=Math.max(...values),mn=Math.min(...values),avg=values.reduce((a,b)=>a+b)/values.length;
   curData={
-    title:'Custom Dataset',sub:labels.length+' DATA POINTS · MANUALLY ENTERED',unit:'',color:'#0071e3',labels,values,
+    title:'Custom Dataset',sub:labels.length+' DATA POINTS · MANUALLY ENTERED',unit:'',
+    labels,values,
     insights:[
       {t:`Highest: <strong>${labels[values.indexOf(mx)]}</strong> at ${mx}`,c:'#0071e3'},
-      {t:`Average: <strong>${avg.toFixed(2)}</strong> across ${values.length} points`,c:'#34c759'},
-      {t:`Range span: <strong>${(mx-mn).toFixed(2)}</strong> between max and min`,c:'#ff9500'},
-      {t:`Lowest: <strong>${labels[values.indexOf(mn)]}</strong> at ${mn}`,c:'#af52de'},
+      {t:`Average: <strong>${avg.toFixed(2)}</strong> across ${values.length} data points`,c:'#28a745'},
+      {t:`Range: <strong>${(mx-mn).toFixed(2)}</strong> between max and min`,c:'#e68a00'},
+      {t:`Lowest: <strong>${labels[values.indexOf(mn)]}</strong> at ${mn}`,c:'#7b4fba'},
     ]
   };
   document.querySelectorAll('.dsi').forEach(b=>b.classList.remove('on'));
   render(curData);
-  toast('Data visualised — '+labels.length+' rows');
+  toast(labels.length+' rows visualised');
 }
 
-/* ══ DRAG AND DROP ══ */
+/* ════════════════════════════════════
+   DRAG AND DROP
+════════════════════════════════════ */
 const dz=document.getElementById('dropZone');
-dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
-dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
-dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');const f=e.dataTransfer.files[0];if(f) handleFile(f);});
+['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,()=>dz.classList.remove('drag')));
+dz.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f) handleFile(f);});
 
-/* ══ EXPORT ══ */
-function exportPNG(){
+/* ════════════════════════════════════
+   EXPORTS
+════════════════════════════════════ */
+function doExportPNG(){
   if(!myChart) return;
   const cv=document.getElementById('myChart');
-  const tmp=document.createElement('canvas');tmp.width=cv.width;tmp.height=cv.height;
-  const c=tmp.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,tmp.width,tmp.height);c.drawImage(cv,0,0);
-  const a=document.createElement('a');a.download='datalens-chart.png';a.href=tmp.toDataURL('image/png');a.click();
+  const tmp=document.createElement('canvas'); tmp.width=cv.width; tmp.height=cv.height;
+  const c=tmp.getContext('2d'); c.fillStyle='#fff'; c.fillRect(0,0,tmp.width,tmp.height); c.drawImage(cv,0,0);
+  const a=document.createElement('a'); a.download='datalens-chart.png'; a.href=tmp.toDataURL('image/png'); a.click();
   toast('Chart saved as PNG');
 }
-function exportCSV(){
+function doExportCSV(){
   if(!curData) return;
-  const rows=['Label,Value'];curData.labels.forEach((l,i)=>rows.push(`"${l}",${curData.values[i]}`));
-  const a=document.createElement('a');a.download='datalens-data.csv';
-  a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'}));a.click();
+  const rows=['Label,Value']; curData.labels.forEach((l,i)=>rows.push(`"${l}",${curData.values[i]}`));
+  const a=document.createElement('a'); a.download='datalens-data.csv';
+  a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'})); a.click();
   toast('CSV exported');
 }
 
-/* ══ TOAST ══ */
+/* ════════════════════════════════════
+   TOAST
+════════════════════════════════════ */
 let _tt;
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('on'),2500);}
-
-/* ══ MARQUEE ══ */
-const ROW1=[
-  {dot:'#0071e3',label:'Reports Delivered',val:'30+'},
-  {dot:'#34c759',label:'Time Saved',val:'75%'},
-  {dot:'#ff9500',label:'Budget Impact',val:'₹2Cr+'},
-  {dot:'#af52de',label:'Industries Covered',val:'10+'},
-  {dot:'#ff3b30',label:'Annotation Accuracy',val:'98%'},
-  {dot:'#0071e3',label:'Experience',val:'21+ Months'},
-  {dot:'#34c759',label:'Companies',val:'2'},
-  {dot:'#ff9500',label:'BI Pipeline Uptime',val:'8mo+'},
-];
-const ROW2=[
-  {dot:'#0071e3',label:'SaaS Market 2028E',val:'$317B'},
-  {dot:'#34c759',label:'Fintech Players Mapped',val:'12'},
-  {dot:'#ff9500',label:'BI Pipeline Live',val:'8mo+'},
-  {dot:'#af52de',label:'Post-Launch Errors',val:'Zero'},
-  {dot:'#ff3b30',label:'Blended CAGR',val:'14.6%'},
-  {dot:'#0071e3',label:'SaaS Verticals',val:'5'},
-  {dot:'#34c759',label:'Decision Timeline',val:'2 Weeks'},
-  {dot:'#ff9500',label:'Security CAGR',val:'22%'},
-];
-
-function buildChip(c){
-  return `<div class="chip"><div class="chip-dot" style="background:${c.dot}"></div><span class="chip-text">${c.label}</span><span class="chip-val">${c.val}</span></div>`;
-}
-function buildMarqueeRow(id,items){
-  const el=document.getElementById(id);
-  if(!el) return;
-  /* duplicate for seamless loop */
-  const html=items.map(buildChip).join('');
-  el.innerHTML=html+html;
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on');
+  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('on'),2600);
 }
 
-/* ══ INIT ══ */
+/* ════════════════════════════════════
+   MARQUEE BUILDER
+════════════════════════════════════ */
+const MQ1=[
+  {dot:'#0071e3', label:'Reports Delivered',    val:'30+'},
+  {dot:'#28a745', label:'Time Saved',           val:'75%'},
+  {dot:'#e68a00', label:'Budget Impact',        val:'₹2Cr+'},
+  {dot:'#7b4fba', label:'Industries Covered',   val:'10+'},
+  {dot:'#d93025', label:'Annotation Accuracy',  val:'98%'},
+  {dot:'#0071e3', label:'Experience',           val:'21+ Months'},
+  {dot:'#28a745', label:'Companies',            val:'2'},
+  {dot:'#e68a00', label:'BI Pipeline Live',     val:'8mo+'},
+];
+const MQ2=[
+  {dot:'#0071e3', label:'SaaS Market 2028E',      val:'$317B'},
+  {dot:'#28a745', label:'Fintech Players Mapped', val:'12'},
+  {dot:'#e68a00', label:'Post-Launch Errors',     val:'Zero'},
+  {dot:'#7b4fba', label:'Blended CAGR',          val:'14.6%'},
+  {dot:'#d93025', label:'SaaS Verticals',        val:'5'},
+  {dot:'#0071e3', label:'Decision Timeline',     val:'2 Weeks'},
+  {dot:'#28a745', label:'Security CAGR',         val:'22%'},
+  {dot:'#e68a00', label:'BI Sources Unified',    val:'4'},
+];
+
+function buildMarquee(id,items){
+  const el=document.getElementById(id); if(!el) return;
+  const html=items.map(c=>
+    `<div class="chip">
+      <div class="cdot" style="background:${c.dot}"></div>
+      <span class="clabel">${c.label}</span>
+      <span class="cval">${c.val}</span>
+    </div>`
+  ).join('');
+  el.innerHTML=html+html; /* duplicate for seamless loop */
+}
+
+/* ════════════════════════════════════
+   INIT
+════════════════════════════════════ */
 window.addEventListener('load',()=>{
-  buildMarqueeRow('mRow1',ROW1);
-  buildMarqueeRow('mRow2',ROW2);
+  buildMarquee('mRow1',MQ1);
+  buildMarquee('mRow2',MQ2);
   loadDS(0,document.querySelector('.dsi'));
 });
 </script>
